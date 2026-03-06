@@ -55,16 +55,41 @@ check them against the standards. No commands to execute.
 ```
 Quality Gate Report
 
-  ✅ / ❌  Zero magic values        — <list violations or "none found">
-  ✅ / ❌  Design-principle compliance — <issues or "compliant">
-  ✅ / ❌  Documentation             — <missing items or "complete">
+  ✅ / ❌  Zero magic values        — <detail>
+  ✅ / ❌  Design-principle compliance — <detail>
+  ✅ / ❌  Documentation             — <detail>
 
 Overall: ✅ ALL GATES PASSED  /  ❌ X GATE(S) FAILED
 ```
 
-If any gate fails, list **exactly** what is wrong — include the failing gate
-number, file path, line number where possible, and a concrete description of
-the issue. Do NOT attempt to fix anything yourself.
+### Failure detail format — mandatory
+
+Every violation must be reported as a **separate bullet** with a clickable
+file link. Group bullets under the gate heading.
+
+**Format per violation:**
+```
+- {description} ({filePath}#L{lineNumber})
+```
+
+**Example — correct:**
+```
+❌  Zero magic values — 3 violations
+
+- Bare string `'pem'` should be a named constant (src/services/snowflake-service.ts#L42)
+- Bare string `'pkcs8'` used twice, extract to constant (src/services/snowflake-service.ts#L58)
+- Bare string `'CoCounsel'` should be a named constant (src/services/snowflake-service.ts#L71)
+
+❌  Documentation — 4 issues
+
+- Missing JSDoc on `generateToken()` (src/services/snowflake-service.ts#L35)
+- Missing JSDoc on `SnowflakeConfig` class (src/config/snowflake-config.ts#L12)
+- Missing file header block comment (src/clients/active-users-snowflake-client.ts#L1)
+- Combined `// Act / Assert` comment should be split (server/src/api/admin/log/__tests__/get.spec.ts#L55)
+```
+
+**Never** lump multiple violations into a single prose sentence.
+**Never** omit the file path or line number.
 
 Return your report to the orchestrator. The orchestrator will present it to the
 user, who decides the next action.
