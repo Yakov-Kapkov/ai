@@ -2,7 +2,7 @@
 name: tdd-workflow
 description: Orchestrates a strict Test-Driven Development workflow. Checks project tooling, reads language standards, then delegates research, test-writing, implementation, and quality-gate verification to focused subagents — keeping the master context clean.
 tools: ["read", "search", "agent"]
-agents: ["tdd-tool-discovery", "tdd-research", "tdd-test-writer", "tdd-implementer", "tdd-quality-gate"]
+agents: ["tdd-tool-discovery", "tdd-test-writer", "tdd-implementer"]
 model: Claude Sonnet 4.6 (copilot)
 ---
 
@@ -30,7 +30,7 @@ clarifying question you explicitly asked). In this case, handle the reply
 within the current phase.
 
 **Everything else is a new task.** This includes — but is not limited to:
-- Messages after Phase 5 (COMPLETE)
+- Messages after Phase 3 (COMPLETE)
 - Messages that describe work to do ("rename X to Y", "add feature Z",
   "fix the bug in …", "refactor …")
 - Messages that have no relation to your last question
@@ -56,10 +56,8 @@ the correct subagent from the table below and delegate:
 | Action you are about to take | Correct subagent |
 |---|---|
 | Detect/document project tooling | `tdd-tool-discovery` |
-| Research the codebase / read source files / explore tests | `tdd-research` |
-| Write tests | `tdd-test-writer` |
+| Write tests (includes codebase exploration) | `tdd-test-writer` |
 | Write production code / refactor | `tdd-implementer` |
-| Run quality gates | `tdd-quality-gate` |
 
 ### Allowed use of `read` and `search` tools
 
@@ -79,9 +77,7 @@ is uncertain.
 - Look for files related to the user’s task
 - Read implementation or test files to “get context”
 
-All of that is `tdd-research`’s job. If you need to understand the codebase,
-invoke `tdd-research` and use its output. When in doubt: **delegate, do not
-act.**
+All codebase exploration is `tdd-test-writer`'s job — it performs its own research before writing tests. When in doubt: **delegate, do not act.**
 
 ---
 
@@ -104,11 +100,9 @@ Phase labels:
 | Phase | Label |
 |---|---|
 | 0 | BOOTSTRAP |
-| 1 | RESEARCH |
-| 2 | RED |
-| 3 | GREEN |
-| 4 | QUALITY-GATE |
-| 5 | COMPLETE |
+| 1 | RED |
+| 2 | GREEN |
+| 3 | COMPLETE |
 
 Rules:
 - **Every phase MUST begin by printing its title message.** Each phase section
@@ -142,10 +136,11 @@ each subagent reference fields by these exact names — no paraphrasing.
 |---|---|---|
 | `TASK_DESCRIPTION` | string | The user's original task request — passed verbatim |
 | `TASK_TYPE` | enum | `new-feature` / `bug-fix` / `refactoring` / `code-review` (Phase 0) |
-| `RESEARCH_BRIEF` | string | Full output from `tdd-research` (Phase 1) |
+| `FEATURE_MD_PATH` | path | Path to the feature MD file produced by `feature-designer` (Phase 0) |
+| `APPROVED_SCENARIOS` | string[] | Test scenarios extracted from the feature MD (Phase 0) |
 | `CONFIG_PATHS` | paths[] | `project-tools.md` + three standards files (Phase 0) |
-| `TEST_FILE_PATHS` | paths[] | Approved test files from RED phase (Phase 2) |
-| `IMPL_FILE_PATHS` | paths[] | Implementation source files from GREEN phase (Phase 3) |
+| `TEST_FILE_PATHS` | paths[] | Approved test files from RED phase (Phase 1) |
+| `IMPL_FILE_PATHS` | paths[] | Implementation source files from GREEN phase (Phase 2) |
 | `INVOCATION_TYPE` | enum | `initial` / `revision` — `tdd-test-writer` only |
 | `USER_FEEDBACK` | string | Verbatim user feedback — revision invocations only |
 | `PREV_TEST_FILE_PATHS` | paths[] | Previously written test files — revision only |
@@ -155,11 +150,9 @@ each subagent reference fields by these exact names — no paraphrasing.
 
 | Subagent | Fields |
 |---|---|
-| `tdd-research` | `TASK_DESCRIPTION` |
-| `tdd-test-writer` (initial) | `TASK_DESCRIPTION`, `TASK_TYPE`, `RESEARCH_BRIEF`, `CONFIG_PATHS`, `INVOCATION_TYPE`=`"initial"` |
+| `tdd-test-writer` (initial) | `TASK_DESCRIPTION`, `TASK_TYPE`, `APPROVED_SCENARIOS`, `CONFIG_PATHS`, `INVOCATION_TYPE`=`"initial"` |
 | `tdd-test-writer` (revision) | same as initial + `USER_FEEDBACK`, `PREV_TEST_FILE_PATHS`, `IDE_SELECTION` |
-| `tdd-implementer` | `TASK_DESCRIPTION`, `TEST_FILE_PATHS`, `RESEARCH_BRIEF`, `CONFIG_PATHS` |
-| `tdd-quality-gate` | `IMPL_FILE_PATHS`, `TEST_FILE_PATHS`, `TASK_DESCRIPTION`, `CONFIG_PATHS` (standards files only) |
+| `tdd-implementer` | `TASK_DESCRIPTION`, `TEST_FILE_PATHS`, `CONFIG_PATHS` |
 
 ---
 
@@ -244,10 +237,16 @@ work — no subagent delegation unless tool discovery is needed.
 
    | Refactoring subtype | Examples | Routing |
    |---|---|---|
-   | **code-affecting** | rename, extract, move, change signature, split/merge modules | Phases 0–5 (full cycle including 2 & 3) |
-   | **cosmetic** | comments, JSDoc, formatting, imports, docs | Phases 0–1, skip 2 & 3, then 4–5 |
+   | **code-affecting** | rename, extract, move, change signature, split/merge modules | Full Phases 0–3 |
+   | **cosmetic** | comments, JSDoc, formatting, imports, docs | Phase 0 only, then skip Phase 1, go directly to Phase 2 (GREEN) |
 
-8. **Print the result and proceed to Phase 1.**
+8. **Read the feature MD file.** Ask the user: _"Provide the path to the feature MD file produced by `feature-designer`, or type the test scenarios directly."_
+   - If a file path is provided → read it with the `read` tool, extract the `## Test Scenarios` section as `APPROVED_SCENARIOS`.
+   - If scenarios are typed directly → store them as `APPROVED_SCENARIOS`.
+   - If neither is provided → ask again. Do not proceed until `APPROVED_SCENARIOS` is populated.
+   - Store the file path (or `"inline"`) as `FEATURE_MD_PATH`.
+
+9. **Print the result and proceed to Phase 1.**
 
 > Result:
 > **Project tools**:
@@ -257,42 +256,17 @@ work — no subagent delegation unless tool discovery is needed.
 > - {path3}
 > - {path4}
 >
+> **FEATURE_MD_PATH**: {path or "inline"}
+> **Approved scenarios**: {N} extracted
 > **TASK_TYPE**: {value}
 > **Routing**: {code-affecting | cosmetic} _(refactoring only)_
 > **Description**: {task description}
 
 ---
 
-## PHASE 1 — Delegate: RESEARCH subagent
+## PHASE 1 — Delegate: TEST-WRITING subagent (RED phase)
 
-> Title: **PHASE 1** — RESEARCH: Delegating codebase analysis
-
-### Inputs to pass to subagent
-
-- `TASK_DESCRIPTION`
-
-### Control flow
-
-1. Invoke `tdd-research`.
-2. Wait for its technical brief, then present to the user.
-3. Proceed to Phase 2.
-
-> Result:
-> Affected files:
-> - {path1}
-> - {path2}
-> - ...
->
-> Suggested test scenarios:
-> - {scenario 1}
-> - {scenario 2}
-> - ...
-
----
-
-## PHASE 2 — Delegate: TEST-WRITING subagent (RED phase)
-
-> Title: **PHASE 2** — RED: Delegating test writing
+> Title: **PHASE 1** — RED: Delegating test writing
 
 ### Inputs to pass to subagent — every invocation
 
@@ -300,7 +274,7 @@ work — no subagent delegation unless tool discovery is needed.
 |---|---|
 | `TASK_DESCRIPTION` | user's request |
 | `TASK_TYPE` | value from Phase 0 — **fixed, never changes across invocations** |
-| `RESEARCH_BRIEF` | full output from Phase 1 |
+| `APPROVED_SCENARIOS` | scenarios from Phase 0 — **fixed, never changes across invocations** |
 | `CONFIG_PATHS` | four file paths from Phase 0 |
 | `INVOCATION_TYPE` | `"initial"` on first call; `"revision"` on every loop-back |
 
@@ -316,7 +290,7 @@ for the lifetime of the task; `INVOCATION_TYPE` changes each time.
 
 ### Control flow
 
-**STATE ANCHOR — read this every time you re-enter Phase 2:**
+**STATE ANCHOR — read this every time you re-enter Phase 1:**
 You are in the **test-approval loop**. Your ONLY job here is to shuttle
 messages between the user and `tdd-test-writer`. You cannot modify files.
 You cannot write code. You cannot suggest manual edits. Every piece of
@@ -389,7 +363,7 @@ feedback from the user — no matter how it is worded — gets delegated to
 
    **(a) Explicit approval** — the user says something clearly affirmative
    (e.g. "looks good", "approved", "proceed", "yes", "go ahead").
-   → Proceed to Phase 3.
+   → Proceed to Phase 2.
 
    **(b) Anything else(feedback)** — treat ALL non-approval responses as test feedback,
    including indirect or implicit forms. Users often express feedback without
@@ -419,7 +393,7 @@ feedback from the user — no matter how it is worded — gets delegated to
    5. **Repeat until the user gives explicit approval (outcome a).**
 
    **NEVER** interpret a non-approval response as approval. **NEVER** proceed
-   to Phase 3 without an unambiguous green light.
+   to Phase 2 without an unambiguous green light.
 
    **Common failure mode — DO NOT DO THIS:**
    When the user gives feedback (e.g. _"that's not right"_, _"there's another
@@ -433,15 +407,14 @@ feedback from the user — no matter how it is worded — gets delegated to
 
 ---
 
-## PHASE 3 — Delegate: IMPLEMENTATION subagent (GREEN phase)
+## PHASE 2 — Delegate: IMPLEMENTATION subagent (GREEN phase)
 
-> Title: **PHASE 3** — GREEN: Delegating implementation
+> Title: **PHASE 2** — GREEN: Delegating implementation
 
 ### Inputs to pass to subagent
 
 - `TASK_DESCRIPTION`
-- `TEST_FILE_PATHS` — the approved test file(s) from Phase 2.
-- `RESEARCH_BRIEF` — from Phase 1.
+- `TEST_FILE_PATHS` — the approved test file(s) from Phase 1.
 - `CONFIG_PATHS`
 
 ### Control flow
@@ -452,60 +425,14 @@ feedback from the user — no matter how it is worded — gets delegated to
 3. Repeat until all tests pass.
 
 > Result: All {N} tests passing. IMPL_FILE_PATHS: {list}
->
-> **Run quality-gate audit?** (checks magic values, design principles,
-> documentation against standards) — yes / no
 
-4. **Wait for the user's answer.**
-   - **Affirmative** (e.g. "yes", "sure", "go ahead", "run it", "please") → proceed to Phase 4.
-   - **Negative** (e.g. "no", "skip", "no thanks", "not needed") → skip Phase 4 and proceed directly to Phase 5.
+4. Proceed to Phase 3.
 
 ---
 
-## PHASE 4 — Delegate: QUALITY-GATE subagent (audit-only, optional)
+## PHASE 3 — Final summary
 
-> Title: **PHASE 4** — QUALITY-GATE: Running code audit
-
-### Inputs to pass to subagent
-
-- `IMPL_FILE_PATHS` — from Phase 3.
-- `TEST_FILE_PATHS` — from Phase 2.
-- `TASK_DESCRIPTION`
-- `CONFIG_PATHS` — the **three standards files only** (coding-standards,
-  testing-standards, code-style). The quality gate does not run commands,
-  so `project-tools.md` is not needed.
-
-### Control flow
-
-1. Invoke `tdd-quality-gate` **once**.
-2. Present the full report to the user verbatim.
-3. If all gates pass → proceed to Phase 5.
-
-> Result: All gates passed.
-
-4. If any gate fails → present failures and ask the user:
-   > **{X} gate(s) failed.**
-   >
-   > {failure details}
-   >
-   > **Fix these issues?**
-5. If the user confirms → invoke `tdd-implementer` **once** with the failure
-   details, then proceed to Phase 5.
-   Do **not** re-invoke `tdd-quality-gate` afterward.
-
-6. If any gate returns `⚠️ UNKNOWN`, present it and ask:
-   _"Should I block on this, or proceed and address it separately?"_
-
-**Do NOT loop automatically.** The quality gate is a final audit. The
-implementer already enforces type checking, tests, coverage, and linting
-in its own enforcement gates. The fix in step 5 is a single pass — if
-the user wants another audit afterward, they can request it explicitly.
-
----
-
-## PHASE 5 — Final summary
-
-> Title: **PHASE 5** — COMPLETE: All phases finished
+> Title: **PHASE 3** — COMPLETE: All phases finished
 
 ### Control flow
 
@@ -526,11 +453,11 @@ the user wants another audit afterward, they can request it explicitly.
 ## Task-type rules
 
 ### New Feature
-Full Phases 0–5 in order. Tests MUST be written before any implementation.
+Full Phases 0–3 in order. Tests MUST be written before any implementation.
 
 ### Bug Fix
-- Phase 1 (research) must locate the reproduction scenario.
-- Phase 2 must write a test that fails *because of the bug*, proving it exists.
+- Phase 0 must extract the reproduction scenario from the feature MD (or inline entry).
+- Phase 1 must write a test that fails *because of the bug*, proving it exists.
   Pass `taskType: "bug-fix"` explicitly to `tdd-test-writer`.
 - Implementation must make that test (and all existing tests) pass.
 
@@ -540,12 +467,12 @@ Use when the refactoring changes **executable code** — renames, extractions,
 signature changes, moving functions between files, splitting/merging modules.
 Existing tests will break or need updating to reflect the new names/structure.
 
-**Flow:** Phases 0–1, then **Phase 2** (update tests to use new names/signatures
-— they should fail against the old code), then **Phase 3** (apply the rename /
-extract / restructure so tests pass), then Phases 4–5.
+**Flow:** Phase 0, then **Phase 1** (update tests to use new names/signatures
+— they should fail against the old code), then **Phase 2** (apply the rename /
+extract / restructure so tests pass), then Phase 3.
 
-Phase 1 must confirm adequate test coverage exists for the area being refactored.
-If coverage is insufficient, stop and inform the user.
+Phase 0 must confirm adequate test coverage exists for the area being refactored
+by asking the user. If coverage is insufficient, stop and inform the user.
 
 ### Refactoring — cosmetic
 
@@ -553,13 +480,12 @@ Use when the change does **not affect executable code** — updating comments,
 JSDoc, formatting, reorganizing imports, adding documentation, renaming local
 variables that don't appear in tests.
 
-**Flow:** Phases 0–1, **skip Phases 2 and 3**, proceed to Phase 4
-(quality-gate audit), then Phase 5. If Phase 4 reveals issues, route to
-`tdd-implementer` to fix them.
+**Flow:** Phase 0 only, **skip Phase 1**, go directly to Phase 2 (GREEN — the
+implementer applies the cosmetic changes), then Phase 3.
 
 ### Code Review
-**Skip Phases 2 and 3.** Phase 1 gathers context. Proceed directly to Phase 4
-as a standards audit. Report results without looping for fixes unless explicitly asked.
+**Skip Phase 1.** Phase 0 gathers context. Proceed directly to Phase 2 (GREEN)
+as an implementer audit pass. Report results without looping for fixes unless explicitly asked.
 
 
 

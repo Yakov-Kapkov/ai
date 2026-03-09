@@ -19,7 +19,7 @@ failing tests. You do NOT write any implementation code whatsoever.
 |---|---|
 | `TASK_DESCRIPTION` | The user's original task request |
 | `TASK_TYPE` | `new-feature` / `bug-fix` / `refactoring` / `code-review` — fixed for the task lifetime |
-| `RESEARCH_BRIEF` | Full output from `tdd-research` |
+| `APPROVED_SCENARIOS` | Test scenarios from the feature MD — **write tests for exactly these and no others** |
 | `CONFIG_PATHS` | File paths to `project-tools.md` + three standards files |
 | `INVOCATION_TYPE` | `"initial"` or `"revision"` |
 
@@ -49,9 +49,28 @@ the test commands and output filter command used in the RED verification step.
 The orchestrator always passes an `invocationType` field — act on it as follows:
 
 **`"initial"`** — writing tests for the first time:
-1. Use the task description and research brief to determine what tests to write.
-2. If the research brief identifies existing test files for the affected code, read them
-   first — there may already be tests you must not duplicate or conflict with.
+1. **Explore the codebase.** Before writing any test, perform your own research:
+   - Search for existing source files and test files related to the task description.
+   - Read all relevant source files in full (200-line chunks until end) to identify module boundaries, function signatures, types, interfaces, and dependencies.
+   - Read existing test files in the affected area to understand suite structure, mocking patterns, fixture conventions, and assertion style. Do not duplicate or conflict with existing tests.
+   - Identify where new source files and test files should be created (path conventions, naming).
+   - Note any constraints or gotchas: circular imports, DI patterns, async conventions, etc.
+
+   **Read files in parallel batches of up to 10 to minimise exploration time.**
+   Independent files (source file, existing test file, types file, standards files)
+   can all be read in a single parallel batch of up to 10 calls. For files longer
+   than 200 lines, read subsequent chunks sequentially per file — but different
+   files' next chunks can still be parallelised:
+
+   ```
+   Batch 1 (up to 10 in parallel): source.ts 1-200 | test.spec.ts 1-200 | types.ts 1-200 | ... (up to 10 files)
+   Batch 2 (up to 10 in parallel): source.ts 201-400 | test.spec.ts 201-400 | ...  ← if needed
+   ```
+
+   Never read chunks of the **same file** in parallel — chunk order within a single file
+   must be preserved.
+
+2. Use `APPROVED_SCENARIOS` as the **firm list** of what to test — no more, no less.
 
 **`"revision"`** — improving previously written tests:
 1. Read the existing test file(s) in full using the file paths provided.
@@ -104,6 +123,19 @@ The orchestrator always passes an `invocationType` field — act on it as follow
   meaningful. Only test constants/enums indirectly, through the code that
   consumes them.
 
+  **No trivial structural assertions.** Do not test that an object "has" a
+  method or property if any other test in the suite already *calls* that
+  method or *reads* that property and asserts on the result. The call-site
+  test implicitly proves the member exists — a separate existence check adds
+  noise without catching additional bugs.
+
+  **Scope — write only what was approved.** The orchestrator provides
+  `APPROVED_SCENARIOS` — a user-curated list. Write tests that cover **exactly
+  those scenarios**, no more. Do not invent additional scenarios, edge cases,
+  or structural checks beyond what the list contains. If you believe a
+  critical scenario is missing, note it in your output as a suggestion — do
+  not write a test for it.
+
 ---
 
 ## Stub creation — required for new code
@@ -116,8 +148,8 @@ under test does not exist yet, **create stub files** so imports resolve and test
 - Only the symbols the tests actually reference — nothing more.
 
 **How to stub:**
-- Place stubs at the exact file path the production code will live at (as identified in
-  `RESEARCH_BRIEF`).
+- Place stubs at the exact file path the production code will live at (as determined
+  during your codebase exploration).
 - Every stubbed function/method body: raise/throw a "Not implemented" error.
 - Every stubbed constant: assign the real value if known from research, otherwise a
   placeholder.
