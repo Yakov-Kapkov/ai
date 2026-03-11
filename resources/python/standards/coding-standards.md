@@ -2,6 +2,14 @@
 
 **INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY technical rules for writing production Python code. Every rule marked MANDATORY is non-negotiable.
 
+## Table of Contents
+
+- [Core Principles](#core-principles)
+- [Type Safety and Strongly-Typed Patterns](#type-safety-and-strongly-typed-patterns)
+- [Magic Number/String Prevention](#magic-numberstring-prevention)
+- [Import Organization](#import-organization)
+- [Comments and Documentation](#comments-and-documentation)
+
 ## Core Principles
 
 ### SOLID Design Principles

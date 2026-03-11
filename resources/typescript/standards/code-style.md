@@ -7,7 +7,6 @@
 - [String Formatting](#string-formatting)
 - [Clean Code Practices](#clean-code-practices)
 - [Comments and Documentation](#comments-and-documentation)
-- [File Header Comment](#file-header-comment-mandatory)
 - [Comments: Explain "Why", Not "What"](#comments-explain-why-not-what)
 - [Anti-Patterns to Avoid](#anti-patterns-to-avoid)
 
@@ -58,57 +57,6 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
 
 ## Comments and Documentation
 
-### File Header Comment (MANDATORY)
-
-**RULE**: Every file MUST begin with a concise block comment (max 5 lines) summarizing the file's purpose, responsibility, and key constraints. Write it for a developer reading the file for the first time.
-
-**What to include:**
-- What this module **is** (one sentence)
-- Its primary **responsibility** or role in the system
-- Key **constraints or design decisions** worth knowing upfront (e.g. "thin controller — no business logic", "singleton pattern")
-
-```typescript
-/**
- * Route handlers for the Admin Logs API.
- *
- * Thin controller: extracts params, validates input, delegates to AdminLogsService.
- * No business logic here — authentication is handled by authenticateSnowflakeAccess middleware.
- */
-```
-
-```typescript
-/**
- * Snowflake data access layer for admin chat logs.
- *
- * Queries COCOUNSEL_BASENJI_PUBLIC_NC_CHATS_VW and maps raw uppercase column names
- * to the AdminLog domain shape. All SQL lives here — no queries outside this class.
- */
-```
-
-**Rules:**
-- ✅ Max 5 lines of text (not counting the `/**` and `*/` delimiters)
-- ✅ Plain prose — no `@param`, `@returns`, or other JSDoc tags
-- ✅ Written at the **very top of the file**, before any imports
-- ❌ Do not restate the filename or list every export
-- ❌ Do not describe implementation details — describe purpose and constraints
-- ❌ **Never use `//` line comments for the file header.** The file header MUST be a JSDoc block (`/** ... */`). `//` comments are only for inline code remarks.
-
-```typescript
-// ❌ WRONG — line comments are not a valid file header
-// StringUtils — utility class for string manipulation operations.
-// Implements the `invert` method for reversing strings.
-// Author: tdd-implementer agent | Date: 2026-02-25
-
-// ✅ CORRECT — JSDoc block comment as file header
-/**
- * Utility class for general-purpose string manipulation.
- *
- * Stateless helper — all methods are pure functions with no side effects.
- */
-```
-
----
-
 ### Comments: Explain "Why", Not "What"
 
 **✅ WRITE comments that explain:**
@@ -126,7 +74,9 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
 ### JSDoc/TSDoc Standards
 
 **All public classes, functions, and methods must have JSDoc comments:**
-- Describe what the code does (not how)
+- Begin with a short plain-prose title (one sentence, no tag) that names the operation
+- Follow with `@summary` for a concise one-line description
+- Add a fuller description using `@description` when additional context is needed
 - Document parameters and return values using `@param` and `@returns`
 - Include examples for complex functionality using `@example`
 - Note any exceptions that may be thrown using `@throws`
@@ -134,7 +84,12 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
 ```typescript
 /**
  * Process a document and extract obligations.
- * 
+ *
+ * @summary Extract obligations from a document by ID.
+ * @description Validates the document ID, retrieves content from storage, runs the
+ * obligations extraction pipeline, and returns a structured result. Throws if the
+ * document is missing or processing fails at any stage.
+ *
  * @param documentId - Unique identifier for the document
  * @param content - Raw document content to process
  * @param options - Optional processing configuration

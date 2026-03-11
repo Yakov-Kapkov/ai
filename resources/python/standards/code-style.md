@@ -2,6 +2,13 @@
 
 **INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY rules for code formatting, readability, and documentation.
 
+## Table of Contents
+
+- [String Formatting](#string-formatting)
+- [Clean Code Practices](#clean-code-practices)
+- [Comments and Documentation](#comments-and-documentation)
+- [Anti-Patterns to Avoid](#anti-patterns-to-avoid)
+
 ## String Formatting (MANDATORY)
 
 **RULE**: Wrap variables in single quotes in error/log/user-facing messages.

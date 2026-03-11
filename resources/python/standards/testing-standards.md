@@ -2,6 +2,19 @@
 
 **INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY rules for writing quality tests. Follow these when writing ANY test code.
 
+## Table of Contents
+
+- [Import Organization](#import-organization)
+- [Unit Test Scope](#unit-test-scope)
+- [Async Testing](#async-testing)
+- [Fixture Usage](#fixture-usage)
+- [Test Structure: AAA](#test-structure-aaa)
+- [Test Parameterization](#test-parameterization)
+- [Test Constants](#test-constants)
+- [Mocking Best Practices](#mocking-best-practices)
+- [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
+- [Test Quality Checklist](#test-quality-checklist)
+
 ## Import Organization (MANDATORY)
 
 **RULE**: Use absolute imports for production code, relative imports for test utilities.

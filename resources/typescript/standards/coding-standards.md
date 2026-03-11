@@ -5,9 +5,11 @@
 ## Table of Contents
 
 - [Core Principles](#core-principles)
+- [Test-Driven Development (TDD)](#test-driven-development-tdd)
 - [Type Safety and Strongly-Typed Patterns](#type-safety-and-strongly-typed-patterns)
 - [Magic Number/String Prevention](#magic-numberstring-prevention)
 - [Import Organization](#import-organization)
+- [Implementation Guidelines](#implementation-guidelines)
 
 ## Core Principles
 
@@ -170,6 +172,54 @@ function processDocuments(documents: Document[], context, timeout = 30) {  // Mi
 - ✅ Arrow functions
 - ✅ Return types (use `: void` for procedures)
 - ✅ Use `unknown` instead of `any` when type is truly unknown
+
+### Prefer Specific Types Over `undefined` (MANDATORY)
+
+**RULE**: Do not use `undefined` in types when a more specific alternative exists. `undefined` weakens type safety — it forces every consumer to add a null-check that could be avoided with better design.
+
+**Prefer these alternatives:**
+
+| Instead of | Use |
+|---|---|
+| `return undefined` when nothing is found | Return type with `\| null` (explicit absence) or throw |
+| Optional parameter `param?: T` | Default value `param: T = defaultValue` when a sensible default exists |
+| `T \| undefined` in a return type | `T \| null` for intentional absence (matches DB/API semantics) |
+| `undefined` as an initial value | `null` as the explicit "not yet set" value |
+
+```typescript
+// ✅ CORRECT: null signals intentional absence
+function findUser(id: string): User | null {
+  const row = db.query(id);
+  return row ?? null;
+}
+
+// ✅ CORRECT: Default value eliminates undefined
+function createClient(timeout: number = 30): Client {
+  return new Client({ timeout });
+}
+
+// ✅ CORRECT: Throw when absence is an error
+function getUser(id: string): User {
+  const user = db.query(id);
+  if (!user) throw new UserNotFoundError(id);
+  return user;
+}
+
+// ❌ AVOID: undefined as return value
+function findUser(id: string): User | undefined {
+  return db.query(id);  // undefined leaks from implementation detail
+}
+
+// ❌ AVOID: Optional parameter when a default makes sense
+function createClient(timeout?: number): Client {
+  return new Client({ timeout: timeout ?? 30 });  // Unnecessary undefined handling
+}
+```
+
+**Exceptions — when `undefined` is acceptable:**
+- ✅ Object properties using `?` syntax where the key may not exist at all
+- ✅ Destructured values from external APIs that return `undefined`
+- ✅ Map/Array `.get()` / `.find()` results (standard library returns `undefined`)
 
 ### Use Interfaces/Types, Not Plain Objects
 
