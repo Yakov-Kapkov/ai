@@ -1,7 +1,7 @@
 ---
 name: init
 description: Initializes the TDD workflow for a project. Scans the repo to detect toolchain and coverage settings, then writes project-tools.md and project-config.json after user approval.
-argument-hint: Run this once per project to set up the TDD workflow before using the feature-designer, test-writer, or implementer agents.
+argument-hint: Run this once per project to set up the TDD workflow before using the feature-designer or implementer agents.
 tools: ["read", "search", "edit"]
 model: Claude Haiku 4.5 (copilot)
 handoffs: 
@@ -143,20 +143,48 @@ form (e.g. `npm test`, `npm run test:file`) since scripts resolve local
 binaries automatically. Only use direct binary invocation with the runner
 prefix when no suitable script exists.
 
-### "Run specific file" commands — script vs direct invocation
+### "Run specific file" commands — always use direct invocation
 
-When generating a "run specific file" command, **read the script body first.**
-Many task runner scripts (npm scripts, Makefile targets, Poetry scripts, etc.)
-contain a hardcoded file glob or directory pattern. In most ecosystems,
-appending extra arguments to such a script does not replace the baked-in
-pattern — it adds to it. The result is the runner receiving both the original
-glob and the specific file, which is not the intended behaviour.
+The "run specific file" command must be the **lowest-level invocation
+possible**: the bare test runner binary, with the runner prefix, taking a
+file path as argument. No script wrappers. No coverage wrappers. No globs.
 
-**Rule:** If a project script already contains a hardcoded file pattern,
-the "run specific file" command must use **direct binary invocation** (with
-the appropriate runner prefix) instead of the script wrapper. Only use the
-script wrapper for specific-file execution when the script is designed to
-accept a file argument without conflicting with a built-in pattern.
+**Why:** Project scripts almost always contain hardcoded file globs, coverage
+wrappers, CI flags, or other options that conflict with single-file execution.
+Appending `-- path/to/file` to such a script does not replace the baked-in
+glob — it adds to it, running all tests plus the specified file. The only
+reliable way to run exactly one file is to call the runner directly.
+
+**Rule:** Read the project's test scripts to understand which runner and flags
+are used (e.g. `-r ts-node/register`, `--config jest.config.ts`). Then
+construct a direct invocation using only:
+1. The ecosystem's runner prefix (`npx`, `poetry run`, `bunx`, etc.)
+2. The test runner binary (`mocha`, `jest`, `pytest`, `vitest`, etc.)
+3. Essential flags copied from the script (transpiler registration, config
+   file path) — but NOT file globs, coverage wrappers, or CI flags
+4. A placeholder for the file path
+
+Examples:
+- `npx mocha -r ts-node/register path/to/file.spec.ts`
+- `npx jest --config jest.config.ts path/to/file.spec.ts`
+- `poetry run pytest path/to/test_file.py`
+
+**Self-check before writing.** If any answer is NO, rewrite the command:
+1. Is this a direct binary call (not an npm/make/poetry script)?
+2. Does it target ONLY the specified file (no glob)?
+3. Is there NO coverage wrapper (`nyc`, `c8`, `coverage run`, etc.)?
+4. Are there NO CI-only flags (`--bail`, `--forbid-only`, etc.)?
+
+### "Run specific file" commands — file path, not test name
+
+The "run specific file" command must select tests by **file path**, not by
+test-name pattern matching (e.g. `--grep`, `-k`, `--filter`, `-t`).
+Test-name filters match the describe/it/test string inside the file — they
+do not reliably select a single file and may match tests in other files.
+
+Use the test runner's file-targeting mechanism instead:
+- Pass the file path as a positional argument
+- Use a file-pattern flag (e.g. `--testPathPattern`, `--spec`, `--file`)
 
 ---
 
