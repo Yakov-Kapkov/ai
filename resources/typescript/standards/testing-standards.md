@@ -6,6 +6,7 @@
 
 - [Import Organization](#import-organization)
 - [Unit Test Scope](#unit-test-scope)
+- [Behavioral Testing](#tests-must-be-behavioral-not-structural)
 - [Async Testing](#async-testing)
 - [Test Setup and Utilities](#test-setup-and-utilities)
 - [Test Structure (AAA)](#test-structure-aaa)
@@ -84,6 +85,53 @@ describe('DocumentProcessor', () => {
 - ✅ Standard library data structures (Array, Map, Set)
 - ✅ The specific module you're testing
 - ✅ Simple value objects and interfaces
+
+### Tests Must Be Behavioral, Not Structural (MANDATORY)
+
+**RULE**: Tests MUST verify **observable behavior** (inputs → outputs, side effects, HTTP responses), NOT internal implementation details (SQL strings, bind parameter positions, internal method call order, private state).
+
+**Why this matters**: Structural tests break when you refactor internals even though behavior is unchanged. They test *how* code works instead of *what* it does, creating brittle tests that resist improvement.
+
+```typescript
+// ❌ WRONG: Structural — asserts on SQL internals and bind positions
+it('should use correct pagination SQL', async (): Promise<void> => {
+  await request(app).get('/api/items').query({ page: 1, pageSize: 10 });
+
+  const call = executeQueryStub.getCall(0);
+  const binds = call.args[0].binds as unknown[];
+  expect(binds.at(-2)).to.equal(11);        // Coupled to bind order
+  expect(binds.at(-1)).to.equal(0);         // Coupled to bind order
+  expect(call.args[0].sqlText).to.include('LIMIT ? OFFSET ?');  // Coupled to SQL shape
+});
+
+// ✅ CORRECT: Behavioral — asserts on the API response
+it('should return first page with correct metadata', async (): Promise<void> => {
+  // Arrange
+  executeQueryStub.resolves(mockRows);
+
+  // Act
+  const res = await request(app).get('/api/items').query({ page: 1, pageSize: 10 });
+
+  // Assert
+  expect(res).to.have.status(200);
+  expect(res.body.metadata.page).to.equal(1);
+  expect(res.body.metadata.pageSize).to.equal(10);
+  expect(res.body.items).to.have.length(expectedCount);
+});
+```
+
+**Structural test red flags — avoid these assertions:**
+- SQL text content (`sqlText.includes(...)`)
+- Bind parameter positions or values (`binds.at(-2)`)
+- Internal method call counts (`.calledOnce`, `.calledTwice`) unless the call *is* the behavior (e.g., verifying an email was sent)
+- Private/internal state inspection
+- Argument shapes passed between internal layers
+
+**What to assert instead:**
+- HTTP status codes and response bodies
+- Return values from public APIs
+- Observable side effects (data written, events emitted, external calls made)
+- Error messages shown to the user
 
 ## Async Testing
 
@@ -452,6 +500,7 @@ context.completeStep = vi.fn();  // Type error
 ## Test Quality Checklist
 
 ### Test Quality Checklist
+- [ ] **Behavioral assertions only: test observable outputs/responses, never SQL strings, bind positions, or internal call structure**
 - [ ] **Import organization: absolute for production code, relative for test utilities**
 - [ ] **All parameters have type annotations including `: void` or `: Promise<void>`; never use `any`**
 - [ ] **Setup utilities used for all common test setup (no duplication)**

@@ -65,6 +65,8 @@ automatically from the feature name in **kebab-case**.
 - Editing any file that is not the approved feature MD.
 - Writing implementation code, stubs, tests, or scaffolding.
 - Running any project command (build, test, lint).
+- Delegating work to subagents. Always use `read` and `search` tools
+  directly — never spawn a subagent to research on your behalf.
 
 ### Code-edit requests
 If the user asks to modify source — decline. Implementation is handled by implementer agent. Capture the intent as acceptance criteria instead.
@@ -127,7 +129,7 @@ of the task.** This is your most important design principle.
 | 4 | **Clarify** | Ask questions **only** if research left genuine gaps. Base questions on what you found, not what you haven't looked at. Skip if unnecessary. |
 | 5 | **Draft** | Present the full feature document using the Output Schema. |
 | 6 | **Review** | Present the implementation plan for review. Loop until user approves. |
-| 7 | **Save** | Derive `<task-name>` from the feature name (kebab-case). Number the folder sequentially. Write `feature.md` and `state.md` to `./.tdd-workflow/tasks/<NN>-<task-name>/`. Never ask for a save location. See save rules below. |
+| 7 | **Save** | Derive `<task-name>` from the feature name (kebab-case). **List `./.tdd-workflow/tasks/`** to find the highest existing number prefix, then use next number. Write `feature.md` and `state.md` to `./.tdd-workflow/tasks/<NN>-<task-name>/`. Never ask for a save location. See save rules below. |
 
 **Rule: never ask questions before researching.** If the user named a file —
 read it. If they described behaviour — search for it. Research first, ask
@@ -154,10 +156,14 @@ only what you cannot determine yourself.
 
 1. `<task-name>` = feature name in kebab-case
    (e.g. "Snowflake Config Provider" → `snowflake-config-provider`).
-2. **Number the folder.** List existing folders in `./.tdd-workflow/tasks/`.
-   Find the highest existing number prefix (e.g. `03-...` → next is `04`).
-   If no folders exist, start at `01`. Pad to two digits.
-   Final folder name: `<NN>-<task-name>` (e.g. `01-snowflake-config-provider`).
+2. **Number the folder.**
+   - **You MUST list the `./.tdd-workflow/tasks/` directory** (using a tool
+     call) to see every existing subfolder **before** choosing a number.
+     Do NOT rely on memory or previous context — always check.
+   - Parse the two-digit prefix from each subfolder name (e.g. `03-foo` → 3).
+   - Set `<NN>` = highest prefix found + 1, zero-padded to two digits.
+     If no folders exist, start at `01`.
+   - Final folder name: `<NN>-<task-name>` (e.g. `04-snowflake-config-provider`).
 3. Create `./.tdd-workflow/tasks/<NN>-<task-name>/feature.md` with the approved
    feature content.
 4. Create `./.tdd-workflow/tasks/<NN>-<task-name>/state.md` with initial state:

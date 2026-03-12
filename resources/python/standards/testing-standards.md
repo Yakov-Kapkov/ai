@@ -6,6 +6,7 @@
 
 - [Import Organization](#import-organization)
 - [Unit Test Scope](#unit-test-scope)
+- [Behavioral Testing](#tests-must-be-behavioral-not-structural)
 - [Async Testing](#async-testing)
 - [Fixture Usage](#fixture-usage)
 - [Test Structure: AAA](#test-structure-aaa)
@@ -54,6 +55,52 @@ processor = DocumentProcessor(llm_client, storage)
 
 **Mock**: API clients, databases, file systems, other modules, time functions  
 **Don't mock**: Standard library types, module under test, simple data models
+
+### Tests Must Be Behavioral, Not Structural (MANDATORY)
+
+**RULE**: Tests MUST verify **observable behavior** (inputs → outputs, side effects, HTTP responses), NOT internal implementation details (SQL strings, bind parameter positions, internal method call order, private state).
+
+**Why this matters**: Structural tests break when you refactor internals even though behavior is unchanged. They test *how* code works instead of *what* it does, creating brittle tests that resist improvement.
+
+```python
+# ❌ WRONG: Structural — asserts on SQL internals and parameter positions
+def test_pagination_sql(self, client: TestClient, mock_db: AsyncMock) -> None:
+    # Act
+    client.get("/api/items", params={"page": 1, "page_size": 10})
+
+    # Assert
+    call_args = mock_db.execute.call_args[0][0]
+    assert "LIMIT" in call_args.text          # Coupled to SQL shape
+    assert call_args.params[-2] == 11          # Coupled to param order
+    assert call_args.params[-1] == 0           # Coupled to param order
+
+# ✅ CORRECT: Behavioral — asserts on the API response
+def test_first_page_returns_correct_metadata(self, client: TestClient, mock_db: AsyncMock) -> None:
+    # Arrange
+    mock_db.execute.return_value = mock_rows
+
+    # Act
+    response = client.get("/api/items", params={"page": 1, "page_size": 10})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["metadata"]["page"] == 1
+    assert response.json()["metadata"]["page_size"] == 10
+    assert len(response.json()["items"]) == expected_count
+```
+
+**Structural test red flags — avoid these assertions:**
+- SQL text content (`"LIMIT" in query.text`)
+- Bind parameter positions or values (`params[-2]`)
+- Internal method call counts (`.assert_called_once()`) unless the call *is* the behavior (e.g., verifying an email was sent)
+- Private/internal state inspection (`obj._internal_field`)
+- Argument shapes passed between internal layers
+
+**What to assert instead:**
+- HTTP status codes and response bodies
+- Return values from public APIs
+- Observable side effects (data written, events emitted, external calls made)
+- Error messages shown to the user
 
 ## Async Testing (MANDATORY)
 
@@ -261,6 +308,7 @@ the mismatch at edit time instead of producing a false-green test.
 ## Test Quality Checklist
 
 **MANDATORY**:
+- [ ] Behavioral assertions only: test observable outputs/responses, never SQL strings, bind positions, or internal call structure
 - [ ] Absolute imports for production, relative for test utilities
 - [ ] All parameters have type annotations
 - [ ] New code has >95% test coverage

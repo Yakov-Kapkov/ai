@@ -51,7 +51,7 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
 - **Descriptive Naming**: Names clearly express intent
 - **Small Functions**: Single responsibility, <20 lines
 - **Type Annotations (MANDATORY)**: Full type annotations for ALL function/method parameters and return types (see `@coding-standards.md`)
-- **Documentation**: JSDoc/TSDoc comments with examples for public functions
+- **Documentation**: TSDoc comments with examples for public functions
 - **Error Handling**: Defensive programming with custom error classes
 - **Import Organization**: All imports at file top following standard conventions (see `@coding-standards.md`)
 
@@ -71,15 +71,41 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
 - Defend standard violations (fix the code instead)
 - Explain obvious code (the code should be self-explanatory)
 
-### JSDoc/TSDoc Standards
+### TSDoc Standards
 
-**All public classes, functions, and methods must have JSDoc comments:**
-- Begin with a short plain-prose title (one sentence, no tag) that names the operation
-- Follow with `@summary` for a concise one-line description
-- Add a fuller description using `@description` when additional context is needed
-- Document parameters and return values using `@param` and `@returns`
-- Include examples for complex functionality using `@example`
-- Note any exceptions that may be thrown using `@throws`
+**Do not add file-level header block comments.** TSDoc applies to exported
+functions, classes, and methods only — not to files.
+
+**All public classes, functions, and methods must have TSDoc comments.**
+
+Every TSDoc block must include these three parts:
+
+1. **Title** — a short plain-prose sentence (no tag) naming the entity
+2. **`@summary`** — a concise one-line description
+3. **`@description`** — a fuller explanation of behaviour, lifecycle, or
+   responsibilities (mandatory for classes; use for functions when additional
+   context beyond the summary is needed)
+
+Additional tags as applicable:
+- `@param` / `@returns` for parameters and return values
+- `@throws` for exceptions
+- `@example` for complex functionality
+
+**Class example:**
+
+```typescript
+/**
+ * Factory and cache for SnowflakeService instances.
+ *
+ * @summary Returns a shared SnowflakeService per type, creating it on first access.
+ * @description Maintains a static map keyed by SnowflakeType. On first call for a
+ * given type, creates the SnowflakeService using the matching config provider and
+ * caches it. Subsequent calls return the cached instance.
+ */
+export class SnowflakeServiceProvider { /* … */ }
+```
+
+**Function example:**
 
 ```typescript
 /**
@@ -96,7 +122,7 @@ logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't do this
  * @returns Processing result with extracted obligations
  * @throws {DocumentNotFoundError} If document doesn't exist
  * @throws {ProcessingError} If processing fails
- * 
+ *
  * @example
  * ```typescript
  * const result = await processDocument('doc-123', content, { timeout: 5000 });
@@ -118,7 +144,8 @@ async function processDocument(
 - [ ] No comments apologizing for bad code (refactor the code instead)
 - [ ] No TODO comments without refactoring the code first
 - [ ] Complex logic has explanatory comments
-- [ ] All public APIs have comprehensive JSDoc comments
+- [ ] All public APIs have comprehensive TSDoc comments
+- [ ] No file-level header block comments
 - [ ] Comments are up-to-date with the code
 
 ## Anti-Patterns to Avoid
