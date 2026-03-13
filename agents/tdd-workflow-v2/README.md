@@ -18,7 +18,11 @@ All three agents are user-invokable. `init` is run once per project; `feature-de
 
 ## Setup
 
-Run `init` once per project to generate the config files, then copy the standards resources for your language into `.tdd-workflow/resources/`. For example, for TypeScript:
+### 1. Create the `.tdd-workflow` folder
+
+Create a `.tdd-workflow/` folder at your project root and copy the resource files from this repo's [`../../resources/`](../../resources/) folder into it. Copy bootstrap.md and project-config.example.json files from `resources/` folder to `.tdd-workflow/` folder. 
+
+You should see something like that:
 
 ```
 <your-project>/
@@ -32,9 +36,9 @@ Run `init` once per project to generate the config files, then copy the standard
                 ├── coding-standards.md
                 ├── testing-standards.md
                 └── code-style.md
+        └── <another language>
+        ...
 ```
-
-Copy the resource files from this repo's [`../../resources/`](../../resources/) folder. The files are identical to those used by `tdd-workflow` v1.
 
 | File | Purpose |
 |---|---|
@@ -44,6 +48,10 @@ Copy the resource files from this repo's [`../../resources/`](../../resources/) 
 | `standards/coding-standards.md` | Mandatory coding rules enforced by `implementer` |
 | `standards/testing-standards.md` | Mandatory testing rules enforced by `implementer` |
 | `standards/code-style.md` | Style rules (naming, comments, formatting) enforced by `implementer` |
+
+### 2. Run the `init` agent
+
+Invoke the `init` agent once per project. It will scan your toolchain, present its findings for approval, and write `.tdd-workflow/project-tools.md` and `.tdd-workflow/project-config.json`.
 
 ---
 
