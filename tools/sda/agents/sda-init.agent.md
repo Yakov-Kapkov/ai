@@ -327,6 +327,14 @@ flag each one in your response so the user can fill it in.
 
 ## project-config.json format
 
+**Schema source:** `./.dev-assistant/resources/project-config.example.json` is
+the single source of truth for the structure of `project-config.json`.
+
+**Strict rule:** Read `project-config.example.json` first. The output file
+must contain **only** the fields present in the example — no additional keys,
+no extra nesting, no invented properties. Copy the structure as-is, then fill
+in detected values.
+
 ```json
 {
   "tests": {
@@ -341,5 +349,3 @@ flag each one in your response so the user can fill it in.
 Set `threshold` to the value detected from the project's coverage config.
 If no config was found, use `95` as the default. If the project has no
 coverage tooling at all, set `enabled` to `false`.
-
-See `./.dev-assistant/resources/project-config.example.json` for reference.
