@@ -5,6 +5,45 @@ Everything here is designed to be dropped into a project and used immediately wi
 
 ---
 
+## ⚡ Install
+
+Use `sda-cli` to install the SDA agents and prompts directly into your project.
+
+### 1. One-time usage (no install)
+
+```bash
+uvx --from git+https://github.com/Yakov-Kapkov/ai.git ai-tools list
+uvx --from git+https://github.com/Yakov-Kapkov/ai.git ai-tools install sda
+uvx --from git+https://github.com/Yakov-Kapkov/ai.git ai-tools install sda --language typescript
+```
+
+### Upgrade the CLI
+
+```bash
+uv tool install ai-tools-cli --force --from git+https://github.com/Yakov-Kapkov/ai.git
+```
+
+### 2. Install the CLI (persistent, recommended)
+
+```bash
+uv tool install ai-tools-cli --from git+https://github.com/Yakov-Kapkov/ai.git
+```
+
+Then from inside your project:
+
+```bash
+ai-tools list                                        # show available tools and status
+
+ai-tools install sda                                 # agents + prompts + .dev-assistant
+ai-tools install sda --language typescript           # + TypeScript standards
+ai-tools install sda --language typescript,python    # + both
+
+ai-tools update sda                                  # overwrite with latest
+ai-tools uninstall sda
+```
+
+---
+
 ## Contents
 
 ### [`agents/`](agents/)

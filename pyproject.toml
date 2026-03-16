@@ -1,0 +1,21 @@
+[project]
+name = "ai-tools-cli"
+version = "0.1.0"
+description = "Install the SDA (Software Development Assistant) agents into your project."
+readme = "tools/sda/README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "typer>=0.12",
+    "rich>=13",
+]
+
+[project.scripts]
+ai-tools = "ai_tools:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_tools"]
