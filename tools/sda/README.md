@@ -20,9 +20,10 @@ All three agents are user-invokable. `sda-init` is run once per project; `sda-fe
 
 ### 1. Create the `.dev-assistant` folder
 
-Create a `.dev-assistant/` folder at your project root and copy the resource files from this repo's [`../../resources/`](../../resources/) folder into it. Copy bootstrap.md and project-config.example.json files from `resources/` folder to `.dev-assistant/` folder. 
+1. Copy the [`.dev-assistant/`](.dev-assistant/) folder from this repo into your project root.
+2. Copy the language folder(s) you need from [`../../resources/`](../../resources/) into `.dev-assistant/resources/`.
 
-You should see something like that:
+You should see something like this:
 
 ```
 <your-project>/
@@ -151,6 +152,7 @@ All resources are read from a `.dev-assistant/` folder in the project root (may 
 |---|---|
 | Project tools (commands) | `.dev-assistant/project-tools.md` |
 | Project config (coverage, etc.) | `.dev-assistant/project-config.json` |
+| Bootstrap | `.dev-assistant/resources/bootstrap.md` |
 | Tool-discovery spec | `.dev-assistant/resources/{language}/tool-discovery.md` |
 | Coding standards | `.dev-assistant/resources/{language}/standards/coding-standards.md` |
 | Testing standards | `.dev-assistant/resources/{language}/standards/testing-standards.md` |
