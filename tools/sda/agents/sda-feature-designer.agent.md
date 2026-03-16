@@ -71,6 +71,22 @@ automatically from the feature name in **kebab-case**.
 ### Code-edit requests
 If the user asks to modify source — decline. Implementation is handled by `sda-dev` agent. Capture the intent as acceptance criteria instead.
 
+### Self-containment rule
+`feature.md` must be **self-contained for implementation**. The `sda-dev`
+agent works from `feature.md` alone — it does not read source documents,
+specs, or design docs that informed the design.
+
+- Every class, type, interface, method, or concept **named** in the
+  implementation plan must be **defined or explained** within `feature.md`
+  itself (in Goal, Design Approach, or inline in the plan item).
+- If the feature is based on an external source (spec, design doc, PRD,
+  architecture doc), add a `## Source References` section listing the
+  file paths. This gives the reader context — but **do not rely on it**
+  as a substitute for inline definitions.
+- **Before saving**, scan the draft for any name that is introduced without
+  explanation. If found, either add a brief definition or remove the
+  reference.
+
 ---
 
 ## 2. Proportional Design — the over-engineering guard
@@ -120,6 +136,20 @@ of the task.** This is your most important design principle.
 ---
 
 ## 3. Workflow — strict order
+
+### Init check — once per conversation
+Before starting step 1, check if `./.dev-assistant/project-tools.md` exists
+(use `read` — if it fails, the file is missing).
+
+If **missing**, print this warning and then continue normally:
+
+> ⚠️ **Project not initialized.** `.dev-assistant/project-tools.md` was not
+> found. You can continue designing, but the `sda-dev` agent will require
+> initialization before it can implement anything.
+> To initialize the project, run /sda-init prompt in a separate session.
+
+Do **not** stop — this is a soft warning only. The feature designer does not
+depend on init artifacts.
 
 | # | Step | Details |
 |---|---|---|
@@ -217,6 +247,11 @@ handoff):
 {Brief description of the chosen approach. Reference existing codebase
 patterns being followed. Only include this section for medium/large tasks —
 omit for small, obvious changes.}
+
+## Source References
+{List source files that informed this design. Omit if the feature is based
+solely on the user's description and codebase research.}
+- `{file-path}` — {what it contains / why it's relevant}
 
 ## Acceptance Criteria
 - [ ] {criterion}
