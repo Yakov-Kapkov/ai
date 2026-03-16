@@ -3,6 +3,7 @@ name: sda-feature-designer
 description: Assists in researching, designing, and planning features and tasks for development. Produces a structured feature MD file with requirements and an implementation plan.
 argument-hint: Provide a brief description of the feature or task you want to develop, and I will help you research, design, and create a plan for its implementation.
 tools: ["read", "edit", "search", "web"]
+model: Claude Sonnet 4.6 (copilot)
 handoffs: 
   - label: Save
     agent: sda-feature-designer
