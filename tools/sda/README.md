@@ -1,6 +1,6 @@
-# sda — Software Development Assistant
+# SDA — Software Development Assistant
 
-A streamlined suite of three coordinated AI agents that enforce a strict Test-Driven Development lifecycle. The system is **handoff-driven** — each agent completes its phase and passes control to the next via structured handoffs. Users invoke agents directly at any stage.
+A streamlined suite of three coordinated AI agents that implement Specification Driven Development approach. The system is **handoff-driven** — each agent completes its phase and passes control to the next via structured handoffs. Users invoke agents directly at any stage.
 
 ---
 
@@ -9,7 +9,7 @@ A streamlined suite of three coordinated AI agents that enforce a strict Test-Dr
 | Agent | Role | Model | User-invokable | Tools |
 |---|---|---|---|---|
 | `sda-init` | Detects project toolchain, writes `project-tools.md` and `project-config.json` | Claude Haiku 4.5 | ✅ (once per project) | read, search, edit |
-| `sda-feature-designer` | Brainstorms, designs, and produces a structured feature specification | Default | ✅ | read, edit, search, web |
+| `sda-feature-designer` | Brainstorms, designs, and produces a structured feature specification | Claude Sonnet 4.6  | ✅ | read, edit, search, web |
 | `sda-dev` | Writes failing tests, makes them pass, refactors, and runs quality checks | Claude Sonnet 4.6 | ✅ | read, edit, search, execute |
 
 All three agents are user-invokable. `sda-init` is run once per project; `sda-feature-designer` and `sda-dev` are used per task.
@@ -52,7 +52,7 @@ You should see something like this:
 
 ### 2. Run the `sda-init` agent
 
-Invoke the `sda-init` agent once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
+Invoke the `sda-init` agent(or /sda-init prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
 
 ---
 
