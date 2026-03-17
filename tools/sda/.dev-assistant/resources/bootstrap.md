@@ -1,6 +1,8 @@
-# Bootstrap — shared initialization for TDD agents
+# Bootstrap — initialization for `sda-dev` agent
 
-Follow these steps at the start of every task before doing agent-specific work.
+This file is read by `sda-dev` at the start of every conversation.
+
+Follow these steps before doing any implementation work.
 
 ---
 
