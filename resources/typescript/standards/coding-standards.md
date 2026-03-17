@@ -266,10 +266,9 @@ const context = {
 - ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — these are magic values too. Name them: `const CHAR_SEPARATOR = ''`, `const WORD_SEPARATOR = ' '`.
 - ✅ **Calculate derived values** when there's a logical relationship (`FINAL_RETRY = MAX_RETRIES - 1`)
 - ✅ **Use dynamic calculations** from data when appropriate (`array.length`)
-- ❌ **DON'T create constants for test-specific values** like `DOCUMENT_COUNT_3`
 - ❌ **DON'T create constants from arbitrary math** like `SECOND_VALUE = FIRST_VALUE + 1` when there's no logical connection
 
-**NOTE**: Test code has different rules - see `@testing-standards.md`
+**NOTE**: Test code has different rules - see `@testing-standards.md`. In particular: assertion values that originate from a mock or fixture object **must** be derived from that object (`mockRow.TOTAL_COUNT`), not re-typed as a literal (`5`).
 
 ### Production Code Standards
 

@@ -115,7 +115,7 @@ context = {"llm_provider": "openai", "llm_modle": "gpt-4"}  # Typo undetected!
 - ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — these are magic values too. Name them: `CHAR_SEPARATOR = ''`, `WORD_SEPARATOR = ' '`.
 - ✅ **Calculate derived values** when logical relationship exists
 
-**NOTE**: Test code has different rules - see `@testing-standards.md`
+**NOTE**: Test code has different rules - see `@testing-standards.md`. In particular: assertion values that originate from a mock or fixture object **must** be derived from that object (`mock_row["total_count"]`), not re-typed as a literal (`5`).
 
 ```python
 # ✅ CORRECT: Named constants — including empty and whitespace strings

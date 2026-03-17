@@ -408,7 +408,8 @@ describe('DocumentProcessing', () => {
 **Step 1: Where is the value?**
 - In `it.each([...])` or `describe.each([...])` → Use **direct literal**
 - Only for creating mocks → Use **direct literal**
-- In an assertion → Go to Step 2
+- In an assertion AND originates from a mock/fixture/constant already defined → **Derive from that source** (e.g. `mockRow.TOTAL_COUNT`, not `5`) — see [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
+- In an assertion with a value you define for this test only → Go to Step 2
 
 **Step 2: How many tests assert this EXACT value?**
 - ONE test only → Use **local constant** in that test

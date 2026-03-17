@@ -222,8 +222,9 @@ def test_processing(sample_documents):
 **Decision tree**:
 1. In `@pytest.mark.parametrize`? → Direct literal
 2. Only for creating mocks? → Direct literal
-3. In assertion, ONE test? → Local constant
-4. In assertion, MULTIPLE tests? → Global constant
+3. In assertion AND value already defined in a mock/fixture? → **Derive from that source** (e.g. `mock_row["total_count"]`, not `5`) — see [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
+4. In assertion, ONE test? → Local constant
+5. In assertion, MULTIPLE tests? → Global constant
 
 **Avoid**:
 - ❌ Global for single-test values
