@@ -54,6 +54,28 @@ You do NOT write application code or tests.
    Extract the threshold percentage if found. If no coverage config exists,
    default to `{ "enabled": true, "threshold": 95 }`.
 
+6. **Detect pre-commit hooks and CI/CD pipelines.** Scan for:
+
+   **Pre-commit / pre-push hook managers** (check all, regardless of language):
+   - `.pre-commit-config.yaml` — pre-commit framework (Python-based, cross-language)
+   - `.husky/` directory — Husky (Node.js)
+   - `lint-staged` key in `package.json` — lint-staged (Node.js, used with Husky)
+   - `.overcommit.yml` — Overcommit (Ruby)
+   - `lefthook.yml` / `lefthook.local.yml` — Lefthook (cross-language)
+   - `.git/hooks/` — raw git hooks scripts (any language)
+
+   **CI/CD pipeline files**:
+   - `.github/workflows/` — GitHub Actions workflow YAML files
+   - `Jenkinsfile` — Jenkins pipeline stages
+   - `.gitlab-ci.yml` — GitLab CI stages
+   - `azure-pipelines.yml` — Azure DevOps stages
+   - Any PR-check, deployment, or release scripts referenced by the above
+
+   For each file found, extract the **ordered sequence of quality commands**
+   (lint, type-check, test, build, deploy, etc.) that the pipeline runs.
+   This sequence becomes the canonical "run this before merging / deploying"
+   reference in `project-tools.md`.
+
 ---
 
 ## What you discover
@@ -71,9 +93,30 @@ In general terms (the spec file provides the authoritative details):
 4. **Code quality tools** — linters, formatters, pre-commit hooks. The spec
    file defines which are expected.
 5. **Project scripts** — build scripts, task runners, Makefiles.
+6. **Pre-commit hooks and CI/CD pipelines** — any hook manager
+   (`.pre-commit-config.yaml`, `.husky/`, `lefthook.yml`, `.overcommit.yml`,
+   raw `.git/hooks/`, etc.) and any CI/CD pipeline file (GitHub Actions,
+   Jenkinsfile, GitLab CI, Azure DevOps, or equivalent). Extract the ordered
+   sequence of quality gates so developers can reproduce the full pipeline
+   locally.
 
 Do not assume any tool is universally required. Let the spec file determine
 what is required, optional, or not applicable for this project's language.
+
+### Two-variant requirement for all verification commands
+
+Every command that checks, verifies, or tests the codebase **must appear in two forms** in `project-tools.md`:
+
+1. **Entire codebase** — targets the full source/test root (no path argument, or the root folder).
+2. **Specific folder / file / pattern** — takes a path or pattern placeholder as the last argument.
+
+This applies to: test execution, type checking, and all linting/formatting tools.
+
+Do NOT write a single command without both forms. If a tool does not support scoped
+execution (e.g. a global config-only runner), add a `# NOTE: targeted execution not
+supported — run entire codebase only` comment and explain why.
+
+---
 
 ### Safety rules for generated commands
 
@@ -122,11 +165,13 @@ Many project dependencies install executables locally (e.g. into
 `node_modules/.bin/`, `.venv/bin/`, `vendor/bin/`). These are **not on PATH**
 and will fail if called directly.
 
-**Rule:** For every command you write, check whether the binary is a
-project-local dependency (listed in `devDependencies`, `[tool.poetry.dev-dependencies]`,
-Gemfile, etc.) rather than a globally installed program. If it is local,
-prefix the command with the ecosystem's package runner so it works without
-requiring the user to have the tool installed globally:
+**Rule:** For every command you write — including test runners, linters, type
+checkers, formatters, **and hook manager CLIs** (e.g. `pre-commit`, `husky`,
+`lefthook`) — check whether the binary is a project-local dependency (listed
+in `devDependencies`, `[tool.poetry.dev-dependencies]`, Gemfile, etc.) rather
+than a globally installed program. If it is local, prefix the command with the
+ecosystem's package runner so it works without requiring the user to have the
+tool installed globally:
 
 | Ecosystem | Runner prefix | Example |
 |---|---|---|
@@ -136,6 +181,19 @@ requiring the user to have the tool installed globally:
 | Python (poetry) | `poetry run` | `poetry run pytest ...` |
 | .NET | `dotnet` | `dotnet test ...` |
 | Cargo (Rust) | `cargo` | `cargo test ...` |
+
+This rule applies equally to hook manager CLIs. Examples:
+
+| Hook manager | Installed via | Correct invocation |
+|---|---|---|
+| pre-commit | poetry (Python) | `poetry run pre-commit run --all-files` |
+| pre-commit | pip / global | `pre-commit run --all-files` |
+| lefthook | npm devDep | `npx lefthook run pre-commit` |
+| lefthook | global / brew | `lefthook run pre-commit` |
+
+**Self-check:** Before writing any hook manager command, verify whether the
+tool appears in the project's dependency manifest. If it does → apply the
+runner prefix. If it is a global install only → use the bare binary.
 
 **Exception:** If the project defines npm/pip/etc. **scripts** that already
 wrap the binary (e.g. `"test": "nyc mocha ..."`), prefer the script runner
@@ -215,11 +273,25 @@ Suggested Commands:
       ...
 
   Type checking:
-    <command>
+    <command>              # check entire codebase
+    <command> <path>       # check specific folder or file
 
   Code quality:
-    <command>   # lint
-    <command>   # format
+    <command>              # lint entire codebase
+    <command> <path>       # lint specific folder or file
+    <command>              # format entire codebase
+    <command> <path>       # format specific folder or file
+
+  Pre-commit checks (if any hook manager config is found):
+    <command>              # run all hooks on staged files
+    <command>              # run all hooks on all files
+    Hooks in order: <hook-1>, <hook-2>, ...
+
+  CI/CD pipeline sequence (if GitHub Actions / Jenkinsfile / etc. found):
+    [{pipeline name}]:
+      1. <command>         # stage/job name
+      2. <command>
+      ...
 
 Project Config:
   Coverage: enabled / disabled
@@ -271,16 +343,13 @@ Generated: {date}
 
 ### Test Execution
 
-Repeat this block for each test runner / area (e.g. server, client).
-Label each section clearly.
-
-#### {area} tests ({runner name})
+#### Run tests ({runner name})
 \`\`\`bash
-# Run all {area} tests
+# Run all tests
 <command>
 
-# Run specific {area} test file
-<command> <pattern>
+# Run specific folder, file, or pattern
+<command> path/to/test_file_or_folder
 
 # With coverage
 <command>
@@ -289,18 +358,35 @@ Label each section clearly.
 <command>
 \`\`\`
 
+#### Test locations
+<!-- Include this subsection ONLY if the codebase has distinct test categories
+     (e.g. unit, integration, e2e). Omit entirely if tests are not separated by type. -->
+- Unit tests       : `tests/unit/`
+- Integration tests: `tests/integration/`
+<!-- list all detected test folders with their category label -->
+
 ### Type Checking
 \`\`\`bash
+# Check entire codebase
 <command>
+
+# Check specific folder or file
+<command> path/to/folder_or_file
 \`\`\`
 
 ### Code Quality
 \`\`\`bash
-# Lint
+# Lint entire codebase
 <command>
 
-# Format
+# Lint specific folder or file
+<command> path/to/folder_or_file
+
+# Format entire codebase
 <command>
+
+# Format specific folder or file
+<command> path/to/folder_or_file
 \`\`\`
 
 ### Lint Warning Threshold
@@ -317,6 +403,37 @@ Usage example : `<specific-file-test-command> 2>&1 | <filter-tool> "passing|fail
 ### Build
 \`\`\`bash
 <command>
+\`\`\`
+
+### Pre-Commit Checks
+<!-- Include ONLY if a hook manager config is detected
+     (.pre-commit-config.yaml, .husky/, lefthook.yml, .overcommit.yml, .git/hooks/, etc.).
+     Omit entirely if absent. -->
+\`\`\`bash
+# Run all hooks on staged files
+<command>
+
+# Run all hooks on all files
+<command>
+\`\`\`
+
+Hooks run in this order:
+1. `<hook-name>` — <what it does>
+2. `<hook-name>` — <what it does>
+<!-- list every hook from the config file with a one-line description -->
+
+### CI / CD Pipeline
+<!-- Include ONLY if GitHub Actions workflows, Jenkinsfile, or equivalent are detected. Omit entirely if absent. -->
+<!-- Run this sequence locally before opening a PR or deploying. -->
+
+#### [{pipeline name / workflow filename}]
+\`\`\`bash
+# 1. <stage or job name>
+<command>
+
+# 2. <stage or job name>
+<command>
+<!-- one block per detected pipeline; list stages in the order they run in CI -->
 \`\`\`
 ```
 
