@@ -41,11 +41,12 @@ Reusable skills that extend agent capabilities.
 
 ### [`resources/`](resources/README.md)
 
-Language-specific standards and tool-discovery specs shared by both the `tdd-workflow`
+Coding standards, tool-discovery specs, and shared development workflow — used by both the `tdd-workflow`
 agents and the `prompts/tdd/` workflow.
 
-| Language | Contents |
+| Resource | Contents |
 |---|---|
+| `resources/development-workflow.md` | Shared, language-independent TDD process and quality gates |
 | `resources/typescript/` | `tool-discovery.md`, `coding-standards.md`, `testing-standards.md`, `code-style.md` |
 | `resources/python/` | `tool-discovery.md`, `coding-standards.md`, `testing-standards.md`, `code-style.md` |
 

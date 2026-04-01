@@ -5,11 +5,9 @@
 ## Table of Contents
 
 - [Core Principles](#core-principles)
-- [Test-Driven Development (TDD)](#test-driven-development-tdd)
 - [Type Safety and Strongly-Typed Patterns](#type-safety-and-strongly-typed-patterns)
 - [Magic Number/String Prevention](#magic-numberstring-prevention)
 - [Import Organization](#import-organization)
-- [Implementation Guidelines](#implementation-guidelines)
 
 ## Core Principles
 
@@ -19,33 +17,6 @@
 - **Liskov Substitution**: Derived classes are substitutable for base classes
 - **Interface Segregation**: Clean, focused interfaces
 - **Dependency Inversion**: Depend on abstractions, not implementations
-
-## Test-Driven Development (TDD)
-
-**MANDATORY WORKFLOW**: You MUST use Test-Driven Development for ALL code you write.
-
-**What is TDD**: A development methodology where tests drive code design. Tests define what the code must do BEFORE you write the implementation.
-
-**The only acceptable workflow**: Test FIRST → Implementation SECOND → Refactor THIRD.
-
-### The TDD Cycle (Follow This Order)
-1. **RED**: Write a failing test that describes what you want the code to do
-2. **GREEN**: Write the simplest code that makes the test pass
-3. **REFACTOR**: Clean up the code while keeping all tests passing
-
-### When to Use TDD
-- ✅ **ALWAYS** - Every new feature requires tests first
-- ✅ **ALWAYS** - Every bug fix requires a failing test first, then the fix
-- ✅ **ALWAYS** - Before refactoring, ensure tests are passing; after refactoring, ensure tests still pass
-
-### Absolute Requirements
-- ✅ **ALWAYS write the test BEFORE writing any implementation**
-- ✅ **NEVER write production code without a failing test first**
-- ✅ Each test verifies ONE specific behavior only
-- ✅ New code MUST have >95% test coverage
-- ✅ All tests MUST pass before and after refactoring
-- ❌ **FORBIDDEN: Writing implementation first, then adding tests**
-- ❌ **FORBIDDEN: Skipping tests for any reason**
 
 ## Type Safety and Strongly-Typed Patterns
 
@@ -157,11 +128,6 @@ function processDocuments(documents, context, timeout = 30) {  // Missing all ty
 
 // ❌ WRONG: Using 'any' type
 function processDocuments(documents: any, context: any): any {  // NEVER use 'any'
-  // Implementation
-}
-
-// ❌ WRONG: Partial type annotations
-function processDocuments(documents: Document[], context, timeout = 30) {  // Missing context type
   // Implementation
 }
 ```
@@ -361,14 +327,14 @@ class Pipeline {
 ### Common Import Anti-Patterns
 
 ```typescript
-// ❌ AVOID: Inline imports
+// ❌ AVOID: Inline/conditional imports
 function processData(): void {
   const structlog = require('structlog');  // Should be at top of file
   const logger = structlog.getLogger();    // Should be module-level
 }
 
 // ❌ AVOID: Imports in exception handlers
-try {
+try {  
   // ... code ...
 } catch (error) {
   const structlog = require('structlog');  // Should be at top of file
@@ -395,29 +361,3 @@ async function loadHeavyModule(): Promise<void> {
   heavyFunction();
 }
 ```
-
-## Implementation Guidelines
-
-### Your Development Workflow
-
-**FOLLOW THIS ORDER**:
-1. **Plan**: Design the component architecture and interfaces
-2. **RED**: Write a failing test that defines the expected behavior
-3. **GREEN**: Write minimal code to make the test pass
-4. **REFACTOR**: Clean up code while keeping all tests passing
-5. **Document**: Add JSDoc comments and explanatory comments
-6. **Verify**: Check that you followed TDD and all coding standards
-
-### Code Review Criteria
-1. **Functionality**: Works correctly, handles edge cases
-2. **Standards**: Follows all guidelines in this document
-3. **Magic Values**: Zero hardcoded numbers/strings
-4. **Type Safety**: Proper type annotations and no `any` types
-5. **SOLID Principles**: Clean design patterns
-6. **Documentation**: Clear JSDoc comments
-
-### Quality Gates
-- All tests must pass
-- >95% code coverage for new code
-- TypeScript compiler passes with strict mode
-- Zero magic numbers/strings in production code, controlled usage in test code

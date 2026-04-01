@@ -6,9 +6,14 @@ Follow these steps before doing any implementation work.
 
 ---
 
-## 1. Detect language
+## 1. Detect language + verify tooling
 
-Read project root markers with the `read` tool to determine the language:
+Read all three files **in one parallel batch**:
+- `./package.json` (or other manifest — see table below)
+- `./.dev-assistant/project-tools.md`
+- `./.dev-assistant/project-config.json`
+
+**Language detection** — determine from the manifest file:
 
 | Marker file | Language |
 |---|---|
@@ -19,11 +24,7 @@ Read project root markers with the `read` tool to determine the language:
 If no marker is found or the language is ambiguous, ask: _"Could not detect
 the project language. Please specify."_
 
----
-
-## 2. Verify project tooling
-
-Read `./.dev-assistant/project-tools.md` and `./.dev-assistant/project-config.json`.
+**Project tooling check:**
 
 If `project-tools.md` is missing → **HARD STOP. No exceptions. No workarounds.
 Do not search for it elsewhere. Do not read project manifest files as a substitute.
@@ -37,7 +38,7 @@ If `project-config.json` is missing → continue with defaults
 
 ---
 
-## 3. Resolve CONFIG_PATHS
+## 2. Resolve CONFIG_PATHS
 
 All resources live inside `.dev-assistant/`. This folder may be hidden
 (dot-folder) — **never use search tools to locate it**. Always use the `read`
@@ -63,7 +64,7 @@ missing, warn and continue with existing files.
 
 ---
 
-## 4. Locate the task
+## 3. Locate the task
 
 The user provides a **task name** (e.g. `01-snowflake-config-provider`).
 Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered
@@ -73,34 +74,31 @@ Each task folder contains:
 
 | File | Created by | Purpose |
 |---|---|---|
-| `feature.md` | `@feature-designer` | Feature specification with test scenarios |
-| `state.md` | `@feature-designer` | Task progress — updated by each agent |
+| `task.md` | `@task-designer` | Task specification with test scenarios |
+| `state.md` | `@task-designer` | Task progress — updated by each agent |
 
-If the task folder or `feature.md` does not exist → **stop**:
-_"Task not found. Invoke the **feature-designer** agent in a new chat to
+If the task folder or `task.md` does not exist → **stop**:
+_"Task not found. Invoke the **task-designer** agent in a new chat to
 create it."_
 
 ---
 
-## 5. state.md schema
+## 4. state.md schema
 
-Each `state.md` tracks the task's progress through the TDD lifecycle:
+Each `state.md` tracks the task's progress per slice:
 
     # Task State
 
-    ## Status
-    PHASE: READY
+    ## Slices
+    1. {Slice name} — PENDING
+    2. {Slice name} — PENDING
 
-    ## Test Files
-
-    ## Stub Files
-
-    ## Implementation Files
-
-| Phase | Meaning | Set by |
+| State | Meaning | Set by |
 |---|---|---|
-| `READY` | Feature designed, no tests yet | `@sda-feature-designer` |
+| `PENDING` | Not started | `@sda-task-designer` |
 | `RED` | Tests written and failing | `@sda-dev` |
-| `GREEN` | Implementation complete, all tests pass | `@sda-dev` |
+| `GREEN` | Tests passing | `@sda-dev` |
+| `DONE` | Slice complete and approved | `@sda-dev` |
 
-Agents update only the sections they own using the `edit` tool.
+`sda-dev` updates each slice's state and appends file paths as it
+progresses.

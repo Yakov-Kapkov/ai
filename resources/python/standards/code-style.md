@@ -78,6 +78,70 @@ to the AdminLog domain shape. All SQL lives here — no queries outside this cla
 
 **Docstrings required**: All public classes/methods/functions describing what (not how), parameters, returns, exceptions, examples for complex functionality
 
+### Docstring Standards
+
+**All public classes, functions, and methods must have docstrings.**
+
+Every docstring must include:
+
+1. **Summary line** — a concise one-line description
+2. **Description** — a fuller explanation of behaviour, lifecycle, or responsibilities (mandatory for classes; use for functions when additional context beyond the summary is needed)
+
+Additional sections as applicable:
+- `Args:` for parameters
+- `Returns:` for return values
+- `Raises:` for exceptions
+- `Example:` for complex functionality
+
+**Class example:**
+
+```python
+class SnowflakeServiceProvider:
+    """Factory and cache for SnowflakeService instances.
+
+    Maintains a dict keyed by SnowflakeType. On first call for a given type,
+    creates the SnowflakeService using the matching config provider and caches it.
+    Subsequent calls return the cached instance.
+    """
+```
+
+**Function example:**
+
+```python
+async def process_document(
+    document_id: str,
+    content: str,
+    options: ProcessingOptions | None = None,
+) -> ProcessingResult:
+    """Extract obligations from a document by ID.
+
+    Validates the document ID, retrieves content from storage, runs the
+    obligations extraction pipeline, and returns a structured result.
+
+    Args:
+        document_id: Unique identifier for the document.
+        content: Raw document content to process.
+        options: Optional processing configuration.
+
+    Returns:
+        Processing result with extracted obligations.
+
+    Raises:
+        DocumentNotFoundError: If document doesn't exist.
+        ProcessingError: If processing fails.
+    """
+```
+
+### Comment Quality Checklist
+- [ ] Comments explain "why" and "what", not "how"
+- [ ] No comments justifying magic numbers (use named constants instead)
+- [ ] No comments apologizing for bad code (refactor the code instead)
+- [ ] No TODO comments without refactoring the code first
+- [ ] Complex logic has explanatory comments
+- [ ] All public APIs have comprehensive docstrings
+- [ ] Module docstring present at top of every file
+- [ ] Comments are up-to-date with the code
+
 ## Anti-Patterns to Avoid
 
 - **Magic Numbers/Strings**: Use named constants - see `@coding-standards.md`

@@ -8,6 +8,7 @@
 - [Unit Test Scope](#unit-test-scope)
 - [Behavioral Testing](#tests-must-be-behavioral-not-structural)
 - [Async Testing](#async-testing)
+- [Test Data Creation](#test-data-creation)
 - [Fixture Usage](#fixture-usage)
 - [Test Structure: AAA](#test-structure-aaa)
 - [Test Parameterization](#test-parameterization)
@@ -53,8 +54,17 @@ llm_client = RealLLMClient()  # Not mocked!
 processor = DocumentProcessor(llm_client, storage)
 ```
 
-**Mock**: API clients, databases, file systems, other modules, time functions  
-**Don't mock**: Standard library types, module under test, simple data models
+**What to mock in unit tests:**
+- ✅ External API clients (LLM, Document Understanding, etc.)
+- ✅ Database connections and ORM instances
+- ✅ File system operations
+- ✅ Other modules from your codebase
+- ✅ Time/date functions (for deterministic tests)
+
+**What NOT to mock:**
+- ✅ Standard library data structures (list, dict, set)
+- ✅ The specific module you're testing
+- ✅ Simple value objects and dataclasses
 
 ### Tests Must Be Behavioral, Not Structural (MANDATORY)
 
@@ -65,14 +75,10 @@ processor = DocumentProcessor(llm_client, storage)
 ```python
 # ❌ WRONG: Structural — asserts on SQL internals and parameter positions
 def test_pagination_sql(self, client: TestClient, mock_db: AsyncMock) -> None:
-    # Act
     client.get("/api/items", params={"page": 1, "page_size": 10})
-
-    # Assert
     call_args = mock_db.execute.call_args[0][0]
-    assert "LIMIT" in call_args.text          # Coupled to SQL shape
-    assert call_args.params[-2] == 11          # Coupled to param order
-    assert call_args.params[-1] == 0           # Coupled to param order
+    assert "LIMIT" in call_args.text       # Coupled to SQL shape
+    assert call_args.params[-2] == 11      # Coupled to param order
 
 # ✅ CORRECT: Behavioral — asserts on the API response
 def test_first_page_returns_correct_metadata(self, client: TestClient, mock_db: AsyncMock) -> None:
@@ -120,6 +126,32 @@ def test_async_processing() -> None:
 ```
 
 **Requirements**: Use `@pytest.mark.asyncio`, `async def`, `await`, `AsyncMock` (not `Mock`)
+
+## Test Data Creation (MANDATORY)
+
+**RULE**: When creating test data that simulates database rows or API responses, use `None` for nullable fields.
+
+**Why this matters**: Database `NULL` values serialize to JSON `null` / Python `None`. Using missing keys or other placeholders creates unrealistic test scenarios.
+
+```python
+# ✅ CORRECT: Test data simulating database/API response
+mock_database_row = {
+    "DOC_ID": "doc-001",
+    "PARENT": None,           # Database NULL maps to None
+}
+
+# ❌ WRONG: Omitting the key entirely
+mock_database_row = {
+    "DOC_ID": "doc-001",
+    # PARENT missing — databases don't omit columns
+}
+```
+
+**When to use `None` in test data:**
+- ✅ Simulating database rows with nullable columns
+- ✅ Mocking API responses with optional fields
+- ✅ Testing data transformation from external sources
+- ✅ Any test data representing deserialized JSON
 
 ## Fixture Usage (MANDATORY)
 
@@ -195,6 +227,12 @@ def test_resuming_flow(): ...     # 30 nearly identical lines
 **Use DIRECT literals**: In `@pytest.mark.parametrize`, mock-only values, simple setup  
 **Use GLOBAL constants**: Value asserted in 2+ tests, shared fixture values, test infrastructure
 
+**Avoid:**
+- ❌ Global for single-test values
+- ❌ Math with globals (`GLOBAL + 1`)
+- ❌ Globals just for parametrize
+- ❌ Globals for coincidentally identical values testing different things
+
 ```python
 # ✅ Local - test-specific assertion value
 def test_retry(self):
@@ -218,19 +256,6 @@ def test_processing(sample_documents):
     result = process(sample_documents)
     assert len(result.documents) == SAMPLE_DOCUMENT_COUNT  # Global
 ```
-
-**Decision tree**:
-1. In `@pytest.mark.parametrize`? → Direct literal
-2. Only for creating mocks? → Direct literal
-3. In assertion AND value already defined in a mock/fixture? → **Derive from that source** (e.g. `mock_row["total_count"]`, not `5`) — see [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
-4. In assertion, ONE test? → Local constant
-5. In assertion, MULTIPLE tests? → Global constant
-
-**Avoid**:
-- ❌ Global for single-test values
-- ❌ Math with globals (`GLOBAL + 1`)
-- ❌ Globals just for parametrize
-- ❌ Globals for coincidentally identical values testing different things
 
 **Atomic replacement**: When creating a constant, replace ALL occurrences or don't create it.
 
@@ -274,19 +299,16 @@ IDs, timestamps, emails, numbers, config values, etc.
 mock_row = {
     "ID": "collection-001",
     "USER_ID": "user@example.com",
-    "ORG_ID": DEFAULT_ORG_ID,
     "CREATED_AT": "2026-01-01T10:00:00Z",
 }
 mock_client.fetch_rows.return_value = [mock_row]
 
 # ❌ WRONG: Re-hardcoded strings from mock_row
 assert logs[0].id == "collection-001"
-assert logs[0].user_id == "user@example.com"
 assert logs[0].created_at == "2026-01-01T10:00:00Z"
 
 # ✅ CORRECT: Derived from mock_row
 assert logs[0].id == mock_row["ID"]
-assert logs[0].user_id == mock_row["USER_ID"]
 assert logs[0].created_at == mock_row["CREATED_AT"]
 ```
 

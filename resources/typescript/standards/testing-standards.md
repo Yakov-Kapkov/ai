@@ -33,11 +33,9 @@ import { InMemoryStorage } from '@/flow-storage/in-memory-storage';
 import { createTestFlow, InputModel } from './common-flows';
 import { JWT_PRIVATE_KEY } from './test-config';
 
-// ❌ WRONG: Absolute imports for test utilities
-import { createTestFlow } from '@/tests/unit/common-flows';  // Should be: from './common-flows'
-
-// ❌ WRONG: Relative imports for production code
-import { FlowStorage } from '../../../src/flow-storage';  // Should be: from '@/flow-storage'
+// ❌ WRONG
+import { createTestFlow } from '@/tests/unit/common-flows';  // Test utility: use relative './common-flows'
+import { FlowStorage } from '../../../src/flow-storage';     // Production code: use absolute '@/flow-storage'
 ```
 
 ## Unit Test Scope
@@ -96,12 +94,9 @@ describe('DocumentProcessor', () => {
 // ❌ WRONG: Structural — asserts on SQL internals and bind positions
 it('should use correct pagination SQL', async (): Promise<void> => {
   await request(app).get('/api/items').query({ page: 1, pageSize: 10 });
-
   const call = executeQueryStub.getCall(0);
-  const binds = call.args[0].binds as unknown[];
-  expect(binds.at(-2)).to.equal(11);        // Coupled to bind order
-  expect(binds.at(-1)).to.equal(0);         // Coupled to bind order
-  expect(call.args[0].sqlText).to.include('LIMIT ? OFFSET ?');  // Coupled to SQL shape
+  expect(call.args[0].binds.at(-2)).to.equal(11);              // Coupled to bind order
+  expect(call.args[0].sqlText).to.include('LIMIT ? OFFSET ?'); // Coupled to SQL shape
 });
 
 // ✅ CORRECT: Behavioral — asserts on the API response
@@ -143,24 +138,18 @@ it('should return first page with correct metadata', async (): Promise<void> => 
 
 ```typescript
 // ✅ CORRECT: Async test for async function
-import { describe, it, expect, vi } from 'vitest';
+it('should process document asynchronously', async (): Promise<void> => {
+  // Arrange
+  const mockClient = {
+    process: vi.fn().mockResolvedValue({ status: 'success' }),
+  };
 
-describe('DocumentProcessor', () => {
-  it('should process document asynchronously', async (): Promise<void> => {
-    // Arrange
-    const mockClient = {
-      process: vi.fn().mockResolvedValue({ status: 'success' }),
-    };
-    
-    // Act
-    const result = await processDocumentAsync(mockClient, 'test.pdf');
-    
-    // Assert
-    expect(result.status).toBe('success');
-    expect(mockClient.process).toHaveBeenCalledWith('test.pdf');
-  });
+  // Act
+  const result = await processDocumentAsync(mockClient, 'test.pdf');
+
+  // Assert
+  expect(result.status).toBe('success');
 });
-
 ```
 
 **Key requirements:**
@@ -181,12 +170,6 @@ describe('DocumentProcessor', () => {
 const mockDatabaseRow: FileRow = {
   DOC_ID: 'doc-001',
   PARENT: null,           // Database NULL maps to null
-};
-
-// ✅ CORRECT: Test data for API response
-const mockApiResponse = {
-  documentId: 'doc-001',
-  result: null,           // API returns null for missing values
 };
 
 // ❌ WRONG: Using undefined for database/API simulation
@@ -351,19 +334,20 @@ Use `it.each` when the same Act+Assert logic applies to different inputs. Use se
    - ✅ Example: `DEFAULT_TEST_TIMEOUT = 30` (timeout used across many tests)
    - ✅ Example: `TEST_ACCESS_TOKEN = 'mock-token-123'` (same token asserted in multiple tests)
 
-### Examples
+**Avoid these mistakes:**
+- ❌ Don't make module-level constants for single-test values
+- ❌ Don't do math with constants (`CONSTANT + 1`)
+- ❌ Don't make constants just for `it.each` arrays
+- ❌ Don't make constants for coincidentally identical values
 
 ```typescript
 // ✅ Local Constants - Test-specific expected values
 it('should configure retry settings correctly', (): void => {
   // Arrange
   const expectedMaxRetries = 6;  // Local - used only in this test
-  const expectedTimeout = 30;
-  const client = createClient({ maxRetries: expectedMaxRetries, timeout: expectedTimeout });
-
+  const client = createClient({ maxRetries: expectedMaxRetries });
   // Act & Assert
   expect(client.maxRetries).toBe(expectedMaxRetries);
-  expect(client.timeout).toBe(expectedTimeout);
 });
 
 // ✅ Direct Literals - Parameterize arrays (no constants needed)
@@ -382,44 +366,14 @@ describe.each([
 
 // ✅ Module-Level Constants - Shared across tests
 const SAMPLE_DOCUMENT_COUNT = 3;
-
-describe('DocumentProcessing', () => {
-  let sampleDocuments: Document[];
-  beforeEach((): void => {
-    sampleDocuments = Array.from({ length: SAMPLE_DOCUMENT_COUNT }, (_, i) =>
-      createDocument(`doc_${i}`)
-    );
-  });
-
-  it('should process all documents', (): void => {
-    // Arrange
-    const expectedStatus = 'completed';  // Local
-    // Act
-    const result = processDocuments(sampleDocuments);
-    // Assert
-    expect(result.documents).toHaveLength(SAMPLE_DOCUMENT_COUNT);  // Module-level
-    expect(result.status).toBe(expectedStatus);  // Local
-  });
-});
+// ... in beforeEach:
+sampleDocuments = Array.from({ length: SAMPLE_DOCUMENT_COUNT }, (_, i) => createDocument(`doc_${i}`));
+// ... in tests:
+expect(result.documents).toHaveLength(SAMPLE_DOCUMENT_COUNT);  // Module-level
+expect(result.status).toBe(expectedStatus);  // Local
 ```
 
-### Decision Tree for Test Values
-
-**Step 1: Where is the value?**
-- In `it.each([...])` or `describe.each([...])` → Use **direct literal**
-- Only for creating mocks → Use **direct literal**
-- In an assertion AND originates from a mock/fixture/constant already defined → **Derive from that source** (e.g. `mockRow.TOTAL_COUNT`, not `5`) — see [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
-- In an assertion with a value you define for this test only → Go to Step 2
-
-**Step 2: How many tests assert this EXACT value?**
-- ONE test only → Use **local constant** in that test
-- MULTIPLE tests assert the same value → Use **module-level constant**
-
-**Step 3: Avoid these mistakes:**
-- ❌ Don't make module-level constants for single-test values
-- ❌ Don't do math with constants (`CONSTANT + 1`)
-- ❌ Don't make constants just for `it.each` arrays
-- ❌ Don't make constants for coincidentally identical values
+**Atomic replacement**: When creating a constant, replace ALL occurrences or don't create it.
 
 ### Derive Expected Values from Mocked Data (MANDATORY)
 
@@ -433,19 +387,16 @@ IDs, timestamps, emails, numbers, config values, etc.
 const mockRow = {
   ID: 'collection-001',
   USER_ID: 'user@example.com',
-  ORG_ID: DEFAULT_ORG_ID,
   CREATED_AT: '2026-01-01T10:00:00Z',
 };
 mockClient.fetchRows.resolves([mockRow]);
 
 // ❌ WRONG: Re-hardcoded strings from mockRow
 expect(logs[0].id).to.equal('collection-001');
-expect(logs[0].userId).to.equal('user@example.com');
 expect(logs[0].createdAt).to.equal('2026-01-01T10:00:00Z');
 
 // ✅ CORRECT: Derived from mockRow
 expect(logs[0].id).to.equal(mockRow.ID);
-expect(logs[0].userId).to.equal(mockRow.USER_ID);
 expect(logs[0].createdAt).to.equal(mockRow.CREATED_AT);
 ```
 
@@ -501,13 +452,14 @@ context.completeStep = vi.fn();  // Type error
 ## Test Quality Checklist
 
 ### Test Quality Checklist
-- [ ] **Behavioral assertions only: test observable outputs/responses, never SQL strings, bind positions, or internal call structure**
-- [ ] **Import organization: absolute for production code, relative for test utilities**
-- [ ] **All parameters have type annotations including `: void` or `: Promise<void>`; never use `any`**
-- [ ] **Setup utilities used for all common test setup (no duplication)**
-- [ ] **AAA structure with exact comments: `// Arrange`, `// Act`, `// Assert`**
-- [ ] **Semantic duplication check: same Act+Assert with different data → `it.each`/`describe.each`**
-- [ ] **Expected values derived from mocks, not re-hardcoded**
+- [ ] Behavioral assertions only: test observable outputs/responses, never SQL strings, bind positions, or internal call structure
+- [ ] Import organization: absolute for production code, relative for test utilities
+- [ ] All parameters have type annotations including `: void` or `: Promise<void>`; never use `any`
+- [ ] New code has >95% test coverage
+- [ ] Setup utilities used for all common test setup (no duplication)
+- [ ] AAA structure with exact comments: `// Arrange`, `// Act`, `// Assert`
+- [ ] Semantic duplication check: same Act+Assert with different data → `it.each`/`describe.each`
+- [ ] Expected values derived from mocks, not re-hardcoded
 - [ ] Named constants for assertion values (local if single-test, module-level if cross-test)
 - [ ] Direct literals for mock setup, `it.each` arrays, and non-asserted config
 - [ ] No module-level constants for single-test values, `it.each` arrays, or arithmetic

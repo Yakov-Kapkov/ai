@@ -159,3 +159,22 @@ async function processDocument(
 - **Untested Code**: Missing unit tests (see `@development-workflow.md`)
 - **Scattered Imports**: Imports scattered throughout code instead of at file top (see `@coding-standards.md`)
 - **Any Types**: Using `any` instead of proper types (see `@coding-standards.md`)
+- **Orphaned Constants**: Never used (delete), used once (make local), or partially used (complete refactoring)
+
+```typescript
+// ❌ Orphaned constant examples
+const UNUSED_VALUE = 42;  // Never referenced - DELETE
+
+const SINGLE_USE = 30;  // Used once - make local
+it('should timeout', (): void => {
+  const result = process({ timeout: SINGLE_USE });
+});
+
+const MOCK_PATH = '/tmp/test.docx';  // Partial - used in 1 of 10 places
+function createMockFile(): Document {
+  return new Document({ path: MOCK_PATH });  // Uses constant
+}
+it('should load', (): void => {
+  const doc = load('/tmp/test.docx');  // Still hardcoded! Complete refactoring or revert
+});
+```
