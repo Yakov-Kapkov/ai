@@ -70,6 +70,13 @@ Do not re-derive rules that are already in the standards (import order,
 parameterisation patterns, TSDoc format, assertion conventions). Read
 the standard, apply it — no deliberation.
 
+**Task.md is behavioral spec, not code spec.** Code snippets and type
+definitions in `task.md` illustrate intent — not authorized final syntax.
+When any detail in `task.md` conflicts with loaded standards (e.g., magic
+strings where standards require constants/enums, naming conventions, type
+patterns), **the standards win**. Adapt the implementation to satisfy both
+the task's behavioral intent and every applicable standard.
+
 ### Bootstrap stop
 
 When bootstrap step 2 says **STOP**, print its message exactly and end
@@ -91,6 +98,11 @@ explicit user approval.
 - Never process multiple slices in one response.
 - Never batch RED + GREEN in one response.
 - Never skip or defer integration-only slices.
+
+**Gate prompt — last line of every gate (after verification commands):**
+- RED gate: `Ready to implement Slice <N>?`
+- All other gates: `Ready to proceed to Slice <next N>: <name>?`
+  (or `Ready for refactoring + quality checks?` if last slice).
 
 ### Verification commands
 
@@ -363,8 +375,10 @@ After approval → update `state.md` → `DONE`.
 *Task mode only.*
 
 One pass over all files after all slices are DONE:
-- Apply design principles from coding standards — reduce duplication,
-  improve naming, extract responsibilities.
+- Re-scan all produced code against every loaded standard. Any violation
+  is a refactoring target — including patterns carried over from task.md
+  code snippets.
+- Reduce duplication, improve naming, extract responsibilities.
 - Make changes incrementally — run tests after each change.
 - Do NOT introduce new behaviour. Revert anything that breaks tests.
 - Skip if already clean ("No refactoring needed").
