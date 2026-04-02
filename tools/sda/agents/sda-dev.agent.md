@@ -94,16 +94,24 @@ explicit user approval.
 
 ### Verification commands
 
-**At every approval gate:**
-1. Update `state.md` **first** — before writing any output.
-2. Write all summaries and test output.
-3. Write the `Verification commands:` label.
-4. Immediately write the fenced code block — **no tool calls between the label and the block**.
+**At every approval gate — execute in this exact order:**
+1. **Tool call only:** Update `state.md`. No text output yet.
+2. **Text output only:** Write summaries, test results, and the fenced code block in one continuous response wit `Verification commands:` label. Zero tool calls after step 1.
 
 The block must contain the exact test command(s) run for that slice so the user can re-run them independently.
 
-**Final output (§6):** one fenced code block with every test command
-from every slice + all quality gate commands (lint, types, coverage).
+**Output format for Verification commands:**
+
+```
+Verification commands:
+
+​\`\`\`{CLI name}
+{command 1 to run tests for this slice}
+{command 2 to run tests for this slice}
+...
+​\`\`\`
+```
+
 
 ### File reading strategy
 
