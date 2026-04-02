@@ -96,19 +96,16 @@ explicit user approval.
 
 **At every approval gate — execute in this exact order:**
 1. **Tool call only:** Update `state.md`. No text output yet.
-2. **Text output only:** Write summaries, test results, and the fenced code block in one continuous response wit `Verification commands:` label. Zero tool calls after step 1.
+2. **Text output only:** Write summaries, test results, and the verification commands in one continuous response. Zero tool calls after step 1.
 
-The block must contain the exact test command(s) run for that slice so the user can re-run them independently.
-
-**Output format for Verification commands:**
+Each gate must end with the exact test command(s) the user can copy-paste to re-run independently. Use this format:
 
 ```
 Verification commands:
 
 ​\`\`\`{CLI name}
-{command 1 to run tests for this slice}
-{command 2 to run tests for this slice}
-...
+{command 1}
+{command 2}
 ​\`\`\`
 ```
 
@@ -285,7 +282,7 @@ Run the exact test command (specific file only — never suite-wide).
 Update `state.md` → `RED`. Then present:
 - Test file path and what each test verifies
 - RED output
-- `Verification commands:` label followed **immediately** by fenced code block
+- Verification commands the user can re-run (format: §Verification commands)
 
 Wait for approval. If user requests changes → revise, re-verify, stop again.
 
@@ -306,7 +303,7 @@ Run the tests. Fix implementation (not tests) on failure. Update
 Update `state.md` → `DONE`. Then present:
 - Files created/modified with summaries
 - GREEN output
-- `Verification commands:` label followed **immediately** by fenced code block
+- Verification commands the user can re-run (format: §Verification commands)
 
 Wait for approval.
 
@@ -321,7 +318,7 @@ Wait for approval.
 Update `state.md` → `DONE`. Then present:
 - Test file path and what each test verifies
 - GREEN output
-- `Verification commands:` label followed **immediately** by fenced code block
+- Verification commands the user can re-run (format: §Verification commands)
 
 Wait for approval.
 
@@ -345,7 +342,7 @@ config entries, exports.
 Present:
 - Files created/modified/deleted with summaries
 - Test results
-- `Verification commands:` label followed **immediately** by fenced code block
+- Verification commands the user can re-run (format: §Verification commands)
 
 After approval → update `state.md` → `DONE`.
 
