@@ -277,6 +277,36 @@ const MAX_RETRY_ATTEMPTS = 3;
 const FINAL_RETRY_ATTEMPT = MAX_RETRY_ATTEMPTS - 1;  // Final attempt is last index
 ```
 
+### Union Types: Derive From Constants
+
+**RULE**: When a union type corresponds to a set of named string/number constants, group the constants into a single `as const` object and derive the type using `(typeof OBJ)[keyof typeof OBJ]`. Never write the string literals twice.
+
+**Why this matters**: Single source of truth — adding, removing, or renaming a value requires only one edit. The derived type updates automatically.
+
+```typescript
+// ✅ CORRECT: const object + derived type
+export const DIRECTIONS = {
+  NORTH: 'north',
+  EAST:  'east',
+  SOUTH: 'south',
+  WEST:  'west',
+} as const;
+
+export type Direction = (typeof DIRECTIONS)[keyof typeof DIRECTIONS];
+
+// ✅ CORRECT: reference values through the object — never via aliases
+const dir: Direction = DIRECTIONS.NORTH;
+
+// ❌ WRONG: string literals duplicated in both the object and a separate type
+export type Direction = 'north' | 'east' | 'south' | 'west';  // duplicated literals
+export const DIRECTIONS = { NORTH: 'north', ... } as const;   // same literals again
+
+// ❌ WRONG: individual alias constants are redundant and must not be created
+export const DIRECTION_NORTH = DIRECTIONS.NORTH;  // just use DIRECTIONS.NORTH directly
+export const DIRECTION_EAST  = DIRECTIONS.EAST;   // same — alias adds nothing
+```
+
+
 ## Import Organization
 
 ### Import Organization (Standard ES6)
