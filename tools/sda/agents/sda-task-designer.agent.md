@@ -235,8 +235,8 @@ patterns being followed. Omit for small, obvious changes.}
        # Task State
 
        ## Slices
-       1. {Slice name} — PENDING
-       2. {Slice name} — PENDING
+       1. {Slice name} — PENDING — {N} scenarios
+       2. {Slice name} — PENDING — {N} scenarios
        ...
 
    States: `PENDING` → `RED` → `GREEN` → `DONE`.

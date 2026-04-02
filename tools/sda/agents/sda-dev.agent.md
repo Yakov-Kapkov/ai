@@ -256,6 +256,12 @@ Additional constraints:
   regression tests.
 - Multiple independent test files → write all in one parallel batch.
 
+#### Completeness check — before any gate
+
+Re-read the current slice in `task.md`. List every numbered scenario.
+For each one, confirm a corresponding test exists. If any scenario has
+no test, write the missing test(s) before proceeding to the gate.
+
 #### Verification
 
 Run the exact test command (specific file only — never suite-wide).
