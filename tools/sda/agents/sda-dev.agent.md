@@ -1,6 +1,6 @@
 ---
 name: sda-dev
-description: Implements code changes following project standards. In task mode, runs the full TDD workflow (RED → GREEN → refactor → quality checks). In ad-hoc mode, implements the request directly with standards and quality checks enforced.
+description: Implements code changes following project standards. All produced code must comply with coding standards. In task mode, runs the full TDD workflow (RED → GREEN → refactor → quality checks). In ad-hoc mode, implements the request directly with standards and quality checks enforced.
 argument-hint: Provide a task name, say "implement the current task", attach a task.md file, or describe what you want implemented.
 tools: ["read", "edit", "search", "execute", "todo"]
 model: Claude Sonnet 4.6 (copilot)
@@ -33,7 +33,7 @@ Do not narrate your intent ("Let me read…", "I will now…").
 Correct sequence:
 
 ```
-[silently read bootstrap + standards files]
+[silently read bootstrap file]
 
 [silently read task.md and state.md to identify next slice]
 
@@ -61,21 +61,17 @@ Phase labels (each on its own line):
 
 ### Standards compliance
 
-**Strictly follow `coding-standards.md`, `testing-standards.md`, and
-`code-style.md` at all times — no exceptions.**
-This applies to every file you write or modify: stubs, tests,
-implementation, and integration changes alike. Before presenting any
-code, scan every line against all loaded standards and fix violations.
-Do not re-derive rules that are already in the standards (import order,
-parameterisation patterns, TSDoc format, assertion conventions). Read
-the standard, apply it — no deliberation.
+**All produced code must comply with coding standards.**
+Global standards provide the baseline. If the workspace contains local
+standards, local rules take precedence over global ones on any conflict.
 
-**Task.md is behavioral spec, not code spec.** Code snippets and type
-definitions in `task.md` illustrate intent — not authorized final syntax.
-When any detail in `task.md` conflicts with loaded standards (e.g., magic
-strings where standards require constants/enums, naming conventions, type
-patterns), **the standards win**. Adapt the implementation to satisfy both
-the task's behavioral intent and every applicable standard.
+Write compliant code from the start — do not write non-compliant code
+and fix it after. Before presenting code at any checkpoint (tests,
+stubs, implementation, integration, refactoring, self-check):
+1. Identify file type (production, test, stub) to determine which
+   standards apply
+2. Verify all produced code is compliant
+3. If standards files are not already fully in context, re-read them before verifying
 
 ### Bootstrap stop
 
@@ -148,20 +144,13 @@ continue any file that returned exactly 500 lines.
 
 ## §1. Bootstrap — every conversation
 
-> Before reading, writing, or modifying ANY source file, complete both
-> steps below. No exceptions — even for trivial requests.
+> Before reading, writing, or modifying ANY source file, complete the
+> step below. No exceptions — even for trivial requests.
 
 1. **Read bootstrap file** — `./.dev-assistant/resources/bootstrap.md`
-   (steps 1–2: detect language, verify tooling, resolve CONFIG_PATHS).
+   (detect language, verify tooling).
    The `.dev-assistant` folder may be hidden from search indexes — always
    access it via direct path reads, not search tools.
-2. **Read all standards files in one parallel batch** — issue reads
-   (lines 1–500) for every CONFIG_PATHS file simultaneously.
-   **Then check:** did any file return exactly 500 lines? If yes, that
-   file is incomplete — issue its next chunk (501–1000) immediately.
-   Repeat until every file returned fewer than 500 lines.
-   **Do not proceed until every standards file has been read to its
-   last line.**
 
 ---
 
@@ -210,8 +199,7 @@ slice fully before starting the next.
 **File scope:** For each slice, read **only** the files listed in that
 slice's section of `task.md` — source files, test files, and any example
 files explicitly referenced. Do not read adjacent files, config files,
-or explore the repo to "understand context". The standards files read
-during bootstrap already contain all conventions you need.
+or explore the repo to "understand context".
 
 For each slice, check its type in `task.md`:
 - **tests required** → TDD flow
@@ -241,8 +229,7 @@ assertion or throw from a stub.
 
 #### Stub rules
 
-Stubs are temporary but must still conform to all standards (types,
-naming, import organisation, comments, etc.).
+Stubs are temporary but must conform to all coding standards.
 
 **Source file does not exist yet** — create at the exact production path:
 - Function/method bodies: throw an unambiguous "not implemented" error.
@@ -259,8 +246,7 @@ naming, import organisation, comments, etc.).
 
 #### Test writing rules
 
-Before finalising, scan every line of the written tests against
-`testing-standards.md` and `code-style.md` and fix any violation found.
+Before finalising, apply standards compliance enforcement.
 
 Additional constraints:
 - Cover **only** the scenarios listed in the slice. No extra edge cases.
@@ -375,9 +361,9 @@ After approval → update `state.md` → `DONE`.
 *Task mode only.*
 
 One pass over all files after all slices are DONE:
-- Re-scan all produced code against every loaded standard. Any violation
-  is a refactoring target — including patterns carried over from task.md
-  code snippets.
+- Read standards files if not already fully in context, then verify all
+  produced code is compliant — including patterns carried over from
+  task document code snippets. Fix any violation found.
 - Reduce duplication, improve naming, extract responsibilities.
 - Make changes incrementally — run tests after each change.
 - Do NOT introduce new behaviour. Revert anything that breaks tests.
@@ -422,9 +408,9 @@ Verify every slice in `state.md` is `DONE` with correct file paths.
 
 ### Self-check (both modes, mandatory)
 
-Re-read standards. Verify all rules met in your code. Report:
-- **✅ All standards met**, or
-- **List of fixes applied**.
+Verify every rule from the loaded coding standards is met in all
+produced/modified code. If standards files are not already fully in
+context, re-read them before verifying.
 
 ### Output
 
