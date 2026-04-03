@@ -7,7 +7,11 @@ model: Claude Sonnet 4.6 (copilot)
 handoffs: 
   - label: Verify consistency
     agent: sda-task-designer
-    prompt: Verify if the task specification is consistent with the current codebase. Flag any discrepancies.
+    prompt: Verify if the task specification is internally consistent and matches the current codebase. Flag any discrepancies.
+    send: true
+  - label: Assess regression
+    agent: sda-task-designer
+    prompt: Run full regression analysis on the current task against the codebase. Trace data flows, identify affected pipelines, check for contract risks.
     send: true
   - label: Implement
     agent: sda-dev
@@ -175,11 +179,16 @@ a text response to the user — never a tool call.** Do not read files,
 search, or research before replying.
 
 1. **Acknowledge** what they want in 1-2 sentences.
-2. **Ask 2-4 focused questions** about design decisions, edge cases,
+2. **Regression triage (mandatory).** Always include this question among
+   your opening questions: _"Does this task introduce new types/values
+   into existing pipelines, modify existing behaviour, or affect data
+   consumed by other systems?"_ The user's answer determines whether
+   the Regression Analysis step applies during Discussion.
+3. **Ask 2-4 focused questions** about design decisions, edge cases,
    or preferences that you cannot answer from the description alone.
    Examples: _"Should out-of-range pages return an empty array or 400?"_,
    _"Do you want cursor-based or offset-based paging?"_
-3. **Do NOT research the codebase yet.** Your questions should come from
+4. **Do NOT research the codebase yet.** Your questions should come from
    your understanding of the problem domain, not from reading code.
    Code research happens later, after the user answers.
 
@@ -211,6 +220,10 @@ paths.
 4. **Scope the blast radius.** Identify which modules import from or
    depend on the changed code. The regression baseline slice should
    target tests in that scope — not the entire test suite.
+5. **Flag semantic mismatches.** When reading files referenced by the
+   task, watch for naming/type inconsistencies that could hide bugs.
+   If spotted, raise immediately: _"`workflow_ids` is a single UUID,
+   not a list — the name is misleading. Should we address this?"_
 
 ### Drafting
 When you have enough clarity (user has answered your questions):
@@ -362,18 +375,117 @@ inside `.dev-assistant/`. Never use `search` to locate files there.
 Triggered when the user asks to verify consistency or uses the **Verify
 consistency** handoff.
 
+**Scope:** Only files and symbols referenced in `task.md`'s implementation
+plan. Do not verify files the agent read during investigation that are
+not part of the task.
+
+### 7a. Internal consistency (task.md against itself)
+
 1. Read `task.md` from the task folder.
-2. For each file path referenced in the implementation plan, read it and
-   verify the path, function/class names, and signatures match.
-3. Present a short report:
+2. Verify the document is self-coherent:
+   - Every acceptance criterion maps to at least one scenario or
+     integration item.
+   - Every scenario/integration item contributes to at least one
+     acceptance criterion.
+   - No two slices contradict each other (e.g., slice 1 adds a field
+     that slice 3 assumes absent).
+   - Symbols introduced in one slice and used in later slices are
+     created before they are referenced (slice ordering is correct).
+   - Every symbol named in the implementation plan is defined or
+     explained somewhere in `task.md`.
+   - If `## Regression Risks` exists, each risk has a corresponding
+     mitigation (acceptance criterion, regression baseline slice, or
+     explicit "staging validation" note).
+
+### 7b. External consistency (task.md against codebase)
+
+3. Collect every file path referenced in the implementation plan.
+4. For each referenced file, read it and verify:
+   - **Structural:** path exists, function/class names match, signatures
+     match.
+   - **Semantic:** scan symbols used by the task for naming/type
+     mismatches:
+
+     | Pattern | Flag |
+     |---|---|
+     | Plural name (`ids`, `items`, `users`) + singular type | Name suggests collection, type is scalar |
+     | Singular name + collection type | Name suggests scalar, type is collection |
+     | `_at` / `_date` / `_time` suffix + non-temporal type | Name suggests datetime, type disagrees |
+     | `_count` / `_total` suffix + non-numeric type | Name suggests number, type disagrees |
+     | `status` / `state` field + free-form string | May need enum constraint |
+
+### 7c. Report
+
+5. Present a short report:
 
 ```markdown
 ## Consistency Report
 
-- ✅ `{path}` — matches spec
-- ❌ `{path}` — mismatch: {what's different}
+### Internal
+- ✅ All acceptance criteria map to scenarios
+- ❌ Acceptance criterion "{text}" has no matching scenario
+- ❌ Slice {N} contradicts Slice {M}: {description}
+- ❌ Symbol `{name}` used in Slice {N} but not created until Slice {M}
+- ❌ `{risk}` — no mitigation in acceptance criteria or slices
+
+### Structural
+- ✅ `{path}::{symbol}` — matches spec
+- ❌ `{path}::{symbol}` — mismatch: {what's different}
 - ⚠️ `{path}` — does not exist yet (expected for new files)
+
+### Semantic
+- ✅ No naming/type mismatches found
+- ⚠️ `{path}::{symbol}` — {description of mismatch}
 ```
 
 If mismatches are found, propose updates to `task.md` and ask the user
 to approve before editing.
+
+---
+
+## 8. Regression Assessment
+
+Triggered when the user asks to assess regression risk or uses the
+**Assess regression** handoff.
+
+This runs the full regression analysis from §1 (Regression Awareness)
+against the codebase — not just checking that `task.md` has risk entries,
+but actively looking for risks that may have been missed.
+
+1. Read `task.md` from the task folder.
+2. For each file path in the implementation plan, read the file and
+   trace its data flow:
+   - What consumes the output of this code? (other modules, APIs,
+     message queues, external systems)
+   - What existing pipelines will process new types/values introduced
+     by this task?
+   - Do those pipelines assume a fixed set of types, shapes, or values?
+3. Check for existing tests covering the affected code paths. Report
+   coverage gaps.
+4. Present a report:
+
+```markdown
+## Regression Assessment
+
+### Data flow
+- `{source file}` → consumed by `{consumer}` via {mechanism}
+
+### Pipeline risks
+- ⚠️ `{pipeline}` assumes {assumption} — new {type/value} may break it
+- ✅ `{pipeline}` handles arbitrary types — no risk
+
+### External contract risks
+- ⚠️ `{system}` consumes {output} — new {type/value/shape} not in
+  its known contract
+- ✅ No external consumers identified
+
+### Test coverage
+- ✅ `{test file}` covers {code path}
+- ❌ No tests cover `{code path}` — suggest adding regression baseline
+
+### Risks not yet in task.md
+- {new risk found during assessment}
+```
+
+5. If new risks are found, propose adding them to `## Regression Risks`
+   and ask the user to approve before editing.
