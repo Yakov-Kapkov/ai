@@ -32,13 +32,9 @@ You should see something like this:
         ├── bootstrap.md
         ├── project-config.example.json
         └── typescript/
-            ├── tool-discovery.md
-            └── standards/
-                ├── coding-standards.md
-                ├── testing-standards.md
-                └── code-style.md
-        └── <another language>
-        ...
+            └── tool-discovery.md
+        └── <another language>/
+            └── tool-discovery.md
 ```
 
 | File | Purpose |
@@ -46,11 +42,14 @@ You should see something like this:
 | `bootstrap.md` | Shared initialization steps read by `sda-dev` at the start of every session |
 | `project-config.example.json` | Example `project-config.json` — copy to `.dev-assistant/project-config.json` and adjust |
 | `tool-discovery.md` | Spec the `sda-init` agent follows to detect your toolchain |
-| `standards/coding-standards.md` | Mandatory coding rules enforced by `sda-dev` |
-| `standards/testing-standards.md` | Mandatory testing rules enforced by `sda-dev` |
-| `standards/code-style.md` | Style rules (naming, comments, formatting) enforced by `sda-dev` |
 
-### 2. Run the `sda-init` agent
+### 2. Install the Standards Compliance skill (recommended)
+
+SDA works best with the [**Standards Compliance**](../../skills/standards-compliance/) skill installed. The skill enforces coding standards, testing standards, and code style rules on all code produced by `sda-dev` — keeping output consistent without manual review.
+
+See the [Standards Compliance README](../../skills/standards-compliance/README.md) for installation instructions.
+
+### 3. Run the `sda-init` agent
 
 Invoke the `sda-init` agent(or /sda-init prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
 
@@ -120,7 +119,7 @@ PHASE 1 — DESIGN
   Handoff → sda-dev.
 
 PHASE 2 — RED
-  sda-dev reads bootstrap + all standards files.
+  sda-dev reads bootstrap.
   Reads feature.md and state.md.
   Writes failing tests for every approved scenario.
   Confirms RED state (tests fail as expected).
@@ -154,9 +153,6 @@ All resources are read from a `.dev-assistant/` folder in the project root (may 
 | Project config (coverage, etc.) | `.dev-assistant/project-config.json` |
 | Bootstrap | `.dev-assistant/resources/bootstrap.md` |
 | Tool-discovery spec | `.dev-assistant/resources/{language}/tool-discovery.md` |
-| Coding standards | `.dev-assistant/resources/{language}/standards/coding-standards.md` |
-| Testing standards | `.dev-assistant/resources/{language}/standards/testing-standards.md` |
-| Code style | `.dev-assistant/resources/{language}/standards/code-style.md` |
 | Task feature spec | `.dev-assistant/tasks/<NN>-<task-name>/feature.md` |
 | Task progress state | `.dev-assistant/tasks/<NN>-<task-name>/state.md` |
 
