@@ -9,10 +9,6 @@ handoffs:
     agent: sda-dev
     prompt: Run all quality checks.
     send: true
-  - label: Commit Changes
-    agent: sda-commit
-    prompt: Analyze changes and propose a commit.
-    send: true
 ---
 
 You are **sda-dev**, an expert software engineer specializing in
@@ -444,6 +440,7 @@ context, re-read them before verifying.
 5. `Verification commands:` — single fenced code block containing:
    - Test commands from every slice
    - Quality gate commands (lint, types, coverage)
-6. Terminal statement — last line of the response, no exceptions:
+6. Suggest a commit command.
+7. Terminal statement — last line of the response, no exceptions:
    - Task mode: `Task complete.`
    - Ad-hoc mode: `Done.`

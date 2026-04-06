@@ -76,39 +76,6 @@ You do NOT write application code or tests.
    This sequence becomes the canonical "run this before merging / deploying"
    reference in `project-tools.md`.
 
-7. **Detect version control system.** Check the repo root for VCS markers
-   (first match wins):
-
-   | Marker | System | Shorthand |
-   |---|---|---|
-   | `.git/` or `.git` file | Git | git |
-   | `.hg/` | Mercurial | hg |
-   | `.svn/` | Subversion | svn |
-
-   If no marker is found, ask the user which VCS is used (or whether the
-   project is not under version control).
-
-   For the detected system, write the `### Version Control` section in
-   `project-tools.md` with the standard commands. The commands must use
-   the correct syntax for the detected OS and shell (same rule as all
-   other commands).
-
-   **Standard command set per VCS:**
-
-   | Action | git | hg | svn |
-   |---|---|---|---|
-   | Status | `git status --short` | `hg status` | `svn status` |
-   | Diff summary | `git diff --stat` | `hg diff --stat` | `svn diff --summarize` |
-   | Diff full | `git diff` | `hg diff` | `svn diff` |
-   | Stage all | `git add -A` | *(auto)* | *(auto)* |
-   | Stage files | `git add <files>` | `hg add <new files>` | `svn add <new files>` |
-   | Commit | `git commit -m "<message>"` | `hg commit -m "<message>"` | `svn commit -m "<message>"` |
-   | Push | `git push` | `hg push` | *(commit pushes to server)* |
-   | Log (last) | `git log -1` | `hg log -l 1` | `svn log -l 1` |
-
-   Only include commands relevant to the detected system — do not list
-   all three.
-
 ---
 
 ## What you discover
@@ -132,8 +99,6 @@ In general terms (the spec file provides the authoritative details):
    Jenkinsfile, GitLab CI, Azure DevOps, or equivalent). Extract the ordered
    sequence of quality gates so developers can reproduce the full pipeline
    locally.
-7. **Version control system** — detected VCS (git, hg, svn) with standard
-   commands for status, diff, stage, commit, push, and log.
 
 Do not assume any tool is universally required. Let the spec file determine
 what is required, optional, or not applicable for this project's language.
@@ -328,14 +293,6 @@ Suggested Commands:
       2. <command>
       ...
 
-  Version control:
-    VCS: <system>          # git, hg, or svn
-    <status command>
-    <diff command>
-    <stage command>
-    <commit command>
-    <push command>
-
 Project Config:
   Coverage: enabled / disabled
   Coverage threshold: <N>%  (source: <config file> or default)
@@ -477,35 +434,6 @@ Hooks run in this order:
 # 2. <stage or job name>
 <command>
 <!-- one block per detected pipeline; list stages in the order they run in CI -->
-\`\`\`
-
-### Version Control
-<!-- Include ONLY if a VCS is detected. Omit entirely if no VCS. -->
-VCS: <system>
-\`\`\`bash
-# Show status
-<status command>
-
-# Show diff summary
-<diff summary command>
-
-# Show full diff
-<diff full command>
-
-# Stage all changes
-<stage all command>
-
-# Stage specific files
-<stage files command>
-
-# Commit
-<commit command>
-
-# Push to remote
-<push command>
-
-# Show last commit
-<log last command>
 \`\`\`
 ```
 
