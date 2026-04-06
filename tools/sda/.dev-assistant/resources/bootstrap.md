@@ -38,29 +38,11 @@ If `project-config.json` is missing → continue with defaults
 
 ---
 
-## 2. Resolve CONFIG_PATHS
+## 2. Standards
 
-All resources live inside `.dev-assistant/`. This folder may be hidden
-(dot-folder) — **never use search tools to locate it**. Always use the `read`
-tool with exact literal paths.
-
-| File | Path |
-|---|---|
-| Coding standards | `./.dev-assistant/resources/{language}/standards/coding-standards.md` |
-| Testing standards | `./.dev-assistant/resources/{language}/standards/testing-standards.md` |
-| Code style | `./.dev-assistant/resources/{language}/standards/code-style.md` |
-
-CONFIG_PATHS is the combined set of all four files:
-1. `./.dev-assistant/project-tools.md`
-2. `./.dev-assistant/resources/{language}/standards/coding-standards.md`
-3. `./.dev-assistant/resources/{language}/standards/testing-standards.md`
-4. `./.dev-assistant/resources/{language}/standards/code-style.md`
-
-Substitute `{language}` with the detected language (e.g. `typescript`,
-`python`, `java`, etc.). If the corresponding `resources/{language}/` folder
-does not exist, the project has no language-specific standards — warn the user
-and continue with `project-tools.md` only. If any individual standards file is
-missing, warn and continue with existing files.
+Coding standards are defined globally and may be overridden by
+workspace-local standards. If the workspace contains local coding
+standards, those take precedence over global defaults.
 
 ---
 
@@ -90,8 +72,8 @@ Each `state.md` tracks the task's progress per slice:
     # Task State
 
     ## Slices
-    1. {Slice name} — PENDING
-    2. {Slice name} — PENDING
+    1. {Slice name} — PENDING — {N} scenarios
+    2. {Slice name} — PENDING — {N} scenarios
 
 | State | Meaning | Set by |
 |---|---|---|
