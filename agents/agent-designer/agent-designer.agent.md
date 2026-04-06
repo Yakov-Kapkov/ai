@@ -3,7 +3,6 @@ name: agent-designer
 description: "Use when: creating, reviewing, improving, or debugging custom Copilot agents (.agent.md files). Handles single agents and coordinated agent groups (orchestrator + sub-agents). Analyzes structure, consistency, tool restrictions, handoffs, and description quality."
 argument-hint: "Describe which agent(s) to create, review, or improve — or point to existing .agent.md files."
 tools: ["read", "edit", "search"]
-model: Claude Opus 4.6 (copilot)
 ---
 
 # Agent Designer
