@@ -1,6 +1,6 @@
 ---
 name: standards-compliance
-description: "Enforce project coding standards on all produced code. Use when: writing production code, test code, stubs, or integration changes. Handles scanning code against coding-standards.md, testing-standards.md, and code-style.md. Resolves conflicts between task specs and standards. Defines global/local priority and scope-specific application rules."
+description: "Enforce project coding standards on all produced code changes. Always read at the start of any implementation task. Contains the authoritative rule content from coding-standards.md, testing-standards.md, and code-style.md. Agent instructions summarize standards behavior only — the actual rules are in this skill and must be loaded explicitly.md. Resolves conflicts between task specs and standards. Defines global/local priority and scope-specific application rules."
 ---
 
 # Standards Compliance Enforcement
