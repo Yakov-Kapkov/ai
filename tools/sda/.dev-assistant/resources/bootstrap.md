@@ -67,13 +67,18 @@ create it."_
 
 ## 4. state.md schema
 
-Each `state.md` tracks the task's progress per slice:
+Each `state.md` tracks the task's progress at two levels — the overall
+task and each individual slice:
 
-    # Task State
+### Task-level status
 
-    ## Slices
-    1. {Slice name} — PENDING — {N} scenarios
-    2. {Slice name} — PENDING — {N} scenarios
+| Status | Meaning | Transition rule |
+|---|---|---|
+| `pending` | No slice has been started | Initial value, set by `@sda-task-designer` |
+| `in-progress` | At least one slice has been started | Set by `@sda-dev` when the first slice moves to `RED`, `GREEN`, or `DONE` |
+| `done` | Every slice is `DONE` | Set by `@sda-dev` at the §6 Finalize step |
+
+### Slice-level status
 
 | State | Meaning | Set by |
 |---|---|---|
@@ -82,5 +87,14 @@ Each `state.md` tracks the task's progress per slice:
 | `GREEN` | Tests passing | `@sda-dev` |
 | `DONE` | Slice complete and approved | `@sda-dev` |
 
-`sda-dev` updates each slice's state and appends file paths as it
-progresses.
+`sda-dev` updates both the task status and each slice's state, and
+appends file paths as it progresses.
+
+Example:
+
+    # Task State
+
+    **Status:** pending
+    ## Slices
+    1. {Slice name} — PENDING — {N} scenarios
+    2. {Slice name} — PENDING — {N} scenarios

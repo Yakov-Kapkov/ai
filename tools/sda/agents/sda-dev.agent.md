@@ -107,7 +107,10 @@ explicit user approval.
 ### Verification commands
 
 **At every approval gate — execute in this exact order:**
-1. **Tool call only:** Update `state.md`. No text output yet.
+1. **Tool call only:** Update `state.md` — slice state first, then:
+   - If this is the first slice leaving `PENDING` → set task `Status: in-progress`.
+   - If every slice is now `DONE` → set task `Status: done`.
+   No text output yet.
 2. **Text output only:** Write summaries, test results, and the verification commands in one continuous response. Zero tool calls after step 1.
 
 Each gate must end with the exact test command(s) the user can copy-paste to re-run independently. Use this format:
@@ -167,7 +170,7 @@ attaches a `task.md`. All standards from §1 apply.
 
 a. **Read bootstrap step 3** to locate the task folder.
 
-b. **Read `state.md`.** Find the first non-DONE slice:
+b. **Read `state.md`.** Note the task-level `Status` field. Find the first non-DONE slice:
    - `PENDING` → determine type from `task.md` (TDD, tests only,
      or integration).
    - `RED` → resuming — read the test file from task.md, skip to GREEN.
@@ -408,7 +411,8 @@ Present ✅/❌ per gate with exact commands in a fenced code block.
 
 ### Task mode
 
-Verify every slice in `state.md` is `DONE` with correct file paths.
+Verify every slice in `state.md` is `DONE` and task `Status` is `done`.
+If any slice is not `DONE`, report it before proceeding.
 
 ### Self-check (both modes, mandatory)
 
