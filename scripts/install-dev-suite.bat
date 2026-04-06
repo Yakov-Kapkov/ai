@@ -1,5 +1,5 @@
 @echo off
-set SCRIPT_DIR=c:\Users\C298270\Source\mine\ai\scripts\
+set SCRIPT_DIR=.\
 set TARGET=%USERPROFILE%\.copilot
 
 echo === Updating SDA tool ===
