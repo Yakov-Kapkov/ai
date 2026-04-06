@@ -159,6 +159,8 @@ continue any file that returned exactly 500 lines.
    The `.dev-assistant` folder may be hidden from search indexes — always
    access it via direct path reads, not search tools.
 
+**Emits:** nothing — silent. Exception: Bootstrap stop prints its message and ends the response.
+
 ---
 
 ## §2. Mode Detection + Setup
@@ -192,6 +194,8 @@ slice loop, and finalize.
 - Identify path conventions for new files.
 - Note constraints: circular imports, DI patterns, async conventions.
 
+**Emits:** nothing — silent.
+
 ---
 
 ## §3. Slice Loop
@@ -202,6 +206,8 @@ deliverable and reviewable.*
 
 Process slices in `state.md` order. Never skip or reorder. Complete one
 slice fully before starting the next.
+
+**Emits:** see gate spec in each flow (TDD / Tests-Only / Integration) below.
 
 **File scope:** For each slice, read **only** the files listed in that
 slice's section of `task.md` — source files, test files, and any example
@@ -374,7 +380,18 @@ One pass over all files after all slices are DONE:
 - Reduce duplication, improve naming, extract responsibilities.
 - Make changes incrementally — run tests after each change.
 - Do NOT introduce new behaviour. Revert anything that breaks tests.
-- Skip if already clean ("No refactoring needed").
+- Skip if already clean.
+
+**Emits:** always one of:
+
+```
+Refactoring:
+- {file}: {what was fixed}
+```
+or
+```
+Refactoring: none needed.
+```
 
 ---
 
@@ -401,9 +418,7 @@ specific-file command — never run all tests.
 - Below threshold → report uncovered lines, ask user before changing code.
 - If coverage cannot be measured — debug the command, report the exact error.
 
-### After all gates pass
-
-Present ✅/❌ per gate with exact commands in a fenced code block.
+**Emits:** ✅/❌ row per gate + fenced code block of all commands run.
 
 ---
 
@@ -420,12 +435,15 @@ Verify every rule from the loaded coding standards is met in all
 produced/modified code. If standards files are not already fully in
 context, re-read them before verifying.
 
-### Output
+**Emits:**
 
 1. New/modified files with paths and one-line summaries.
 2. Standards self-check result.
 3. Quality check results (✅/❌/⚠️ per gate).
-4. Refactoring summary — or "No refactoring needed".
+4. Refactoring summary (from §4 output block).
 5. `Verification commands:` — single fenced code block containing:
    - Test commands from every slice
    - Quality gate commands (lint, types, coverage)
+6. Terminal statement — last line of the response, no exceptions:
+   - Task mode: `Task complete.`
+   - Ad-hoc mode: `Done.`
