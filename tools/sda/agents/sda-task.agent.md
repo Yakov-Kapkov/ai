@@ -1,16 +1,16 @@
 ---
-name: sda-task-designer
-description: Assists in researching, designing, and planning tasks for development. All code examples in task specifications must comply with coding standards. Produces a structured task MD file with requirements and an implementation plan.
-argument-hint: Provide a brief description of the task you want to develop, and I will help you research, design, and create a plan for its implementation.
+name: sda-task
+description: "Designs atomic task specifications for implementation. Produces a structured task.md with test scenarios and an implementation plan. Use when: the user wants to design a task, plan implementation details, or prepare a piece of work for sda-dev."
+argument-hint: Describe the task, or say "design a task for feature X".
 tools: ["read", "edit", "search"]
 model: Claude Sonnet 4.6 (copilot)
 handoffs: 
   - label: Verify consistency
-    agent: sda-task-designer
+    agent: sda-task
     prompt: Verify if the task specification is internally consistent and matches the current codebase. Flag any discrepancies.
     send: true
   - label: Assess regression
-    agent: sda-task-designer
+    agent: sda-task
     prompt: Run full regression analysis on the current task against the codebase. Trace data flows, identify affected pipelines, check for contract risks.
     send: true
   - label: Implement
@@ -139,9 +139,16 @@ Your primary job is to **protect the user from over-engineering.**
 - **Large task** (cross-cutting): Discuss trade-offs, propose approaches,
   then draft.
 
+### Feature context
+If `task.md` has a `## Feature` section, read
+`.dev-assistant/features/{feature-name}/feature.md` for design context.
+Use the feature's Design Approach as the starting point for this task's
+approach. The task may refine or challenge the feature-level design —
+flag differences explicitly.
+
 ### Self-containment rule
 `task.md` must be **self-contained for implementation**. The `sda-dev`
-agent works from `task.md` alone.
+agent works from `task.md` alone — it does not read `feature.md`.
 
 - Every class, type, interface, method, or concept **named** in the
   implementation plan must be **defined or explained** within `task.md`.
@@ -261,6 +268,9 @@ When the user approves (or uses the **Save** handoff):
 
 ## Goal
 {1-2 sentences: what and why.}
+
+## Feature
+{feature-name — omit this section entirely for standalone tasks}
 
 ## Design Approach
 {Omit for small, obvious changes. One subsection per slice when

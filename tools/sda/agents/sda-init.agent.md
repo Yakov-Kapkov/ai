@@ -1,14 +1,9 @@
 ---
 name: sda-init
 description: Initializes the project for sda agents. Scans the repo to detect toolchain and coverage settings, then writes project-tools.md and project-config.json after user approval.
-argument-hint: Run this once per project to set up the workflow before using the sda-task-designer or sda-dev agents.
+argument-hint: Run this once per project to set up the workflow before using other sda agents.
 tools: ["read", "search", "edit"]
 model: Claude Haiku 4.5 (copilot)
-handoffs: 
-  - label: Design Task
-    agent: sda-task-designer
-    prompt: Design a task and produce a specification with test scenarios
-    send: true
 ---
 
 You are the **Project Init** agent. Your job is to scan a project, detect its
@@ -317,7 +312,7 @@ After presenting the report, ask:
 
 - If approved → write both files and confirm:
   _"`project-tools.md` and `project-config.json` written to
-  `./.dev-assistant/`. Next step: Invoke the **task-designer** agent in a new chat with a description of the task."_
+  `./.dev-assistant/`. Next step: Invoke the **sda-task** agent in a new chat with a description of the task."_
 - If the user requests changes → update the report and ask again.
 - Do NOT write any file before receiving explicit approval.
 

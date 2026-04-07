@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 # ── Paths ────────────────────────────────────────────────────────────────────
 $RepoRoot    = $PSScriptRoot | Split-Path -Parent
 $BackupsRoot = Join-Path $TargetBase 'backups'
-$Timestamp   = Get-Date -Format 'yyyy-MM-dd_HH_mm'
+$Timestamp   = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 
 $AgentsSrc  = Join-Path $RepoRoot "tools\$Name\agents"
 $PromptsSrc = Join-Path $RepoRoot "tools\$Name\prompts"
@@ -47,7 +47,7 @@ if ($AgentFiles.Count -eq 0 -and $PromptFiles.Count -eq 0) {
 
 # ── Helper ────────────────────────────────────────────────────────────────────
 function Backup-Files($Subfolder, $SrcDir, [string[]]$FileNames) {
-    $BackupDir = Join-Path (Join-Path $BackupsRoot "$Name-$Timestamp") $Subfolder
+    $BackupDir = Join-Path (Join-Path $BackupsRoot "${Name}_$Timestamp") $Subfolder
     New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
     foreach ($F in $FileNames) {
         $Src = Join-Path $SrcDir $F

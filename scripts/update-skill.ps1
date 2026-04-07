@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 # ── Paths ────────────────────────────────────────────────────────────────────
 $RepoRoot    = $PSScriptRoot | Split-Path -Parent
 $BackupsRoot = Join-Path $TargetBase 'backups'
-$Timestamp   = Get-Date -Format 'yyyy-MM-dd_HH_mm'
+$Timestamp   = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 
 $SkillSrc = Join-Path $RepoRoot "skills\$Name"
 $SkillDst = Join-Path $TargetBase "skills\$Name"
@@ -37,7 +37,7 @@ Write-Host "=== Updating skill: $Name ==="
 # STEP 1 – BACKUP
 Write-Host '  Backup:'
 if (Test-Path $SkillDst) {
-    $BackupDir = Join-Path $BackupsRoot "$Name-$Timestamp"
+    $BackupDir = Join-Path $BackupsRoot "${Name}_$Timestamp"
     New-Item -ItemType Directory -Path (Split-Path $BackupDir) -Force | Out-Null
     Copy-Item $SkillDst -Destination $BackupDir -Recurse -Force
     Write-Host "    -> $BackupDir"
