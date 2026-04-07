@@ -277,3 +277,104 @@ Then continue normally.
 Always use `read` (by explicit path) or directory listing to access
 anything inside `.dev-assistant/`. Never use `search` to locate files
 there.
+
+---
+
+## 7. Consistency Check
+
+Triggered when the user clicks **Verify consistency** or asks to verify.
+
+**Scope:** Only the current `feature.md` and files referenced in its
+Design Approach.
+
+### 7a. Internal consistency (feature.md against itself)
+
+1. Read `feature.md` from the feature folder.
+2. Verify:
+   - Every user story maps to at least one aspect in Design Approach.
+   - Every task in `## Tasks` relates to at least one aspect in Design
+     Approach.
+   - No contradictions between Design Approach aspects (e.g., aspect 1
+     says "sync" and aspect 2 assumes "async").
+   - Key Decisions align with the Design Approach — no decision
+     contradicts a stated solution.
+   - Technical Considerations (security, performance, backward compat)
+     are consistent with the approach chosen.
+   - No undefined terms — every component or concept named in the
+     approach is explained somewhere in the document.
+
+### 7b. External consistency (feature.md against codebase)
+
+3. For each module or component referenced in Design Approach, verify:
+   - The module or component exists in the codebase.
+   - The described role matches what the module actually does.
+   - Proposed changes don't conflict with the current architecture
+     (e.g., adding to a module that was removed, depending on a
+     deprecated system, assuming a layer boundary that doesn't exist).
+
+### 7c. Report
+
+```markdown
+## Feature Consistency Report
+
+### Internal
+- ✅ All user stories map to design aspects
+- ❌ User story "{text}" has no matching design aspect
+- ❌ Task "{name}" not covered by any design aspect
+- ❌ Contradiction: {aspect A} vs {aspect B}
+
+### External
+- ✅ `{module}` — exists, role matches
+- ❌ `{module}` — does not exist
+- ❌ `{module}` — role mismatch: {described role} vs {actual role}
+- ⚠️ `{module}` — does not exist yet (expected for new modules)
+```
+
+If mismatches are found, propose updates to `feature.md` and ask the
+user to approve before editing.
+
+---
+
+## 8. Regression Assessment
+
+Triggered when the user clicks **Assess regression** or asks to assess.
+
+This traces architectural impact from the feature's proposed changes to
+identify risks that may have been missed during brainstorming. This is a
+**feature-level** assessment — it reasons about modules, systems, and
+contracts, not about code paths or test coverage.
+
+1. Read `feature.md` from the feature folder.
+2. For each module or component mentioned in Design Approach, identify:
+   - What other modules or systems consume its output?
+   - What existing pipelines will process new types/values introduced
+     by this feature?
+   - Do those pipelines assume a fixed set of types, shapes, or values?
+   - Does this feature change data that crosses a system boundary
+     (APIs, events, shared databases, file formats)?
+3. Present a report:
+
+```markdown
+## Feature Regression Assessment
+
+### Architectural impact
+- `{module}` — {what changes and which dependents are affected}
+
+### Pipeline risks
+- ⚠️ `{pipeline}` assumes {assumption} — new {type/value} may break it
+- ✅ `{pipeline}` handles arbitrary types — no risk
+
+### External contract risks
+- ⚠️ `{system}` consumes {output} — new shape not in its known contract
+- ✅ No external consumers identified
+
+### Behavioral risks
+- ⚠️ {existing behavior} may change as a side effect of {proposed change}
+- ✅ No unintended behavioral changes identified
+
+### Risks to capture in feature.md
+- {new risk found during assessment}
+```
+
+4. If new risks are found, propose adding them to the Technical
+   Considerations section and ask the user to approve before editing.
