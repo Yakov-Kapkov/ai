@@ -385,10 +385,10 @@ Status prefixes:
 1. `<task-name>` = task name in **kebab-case**.
 2. **Number the folder:**
    - List `./.dev-assistant/tasks/` to see existing subfolders.
-   - `<NN>` = highest existing prefix + 1, zero-padded to two digits.
-     Start at `01` if no folders exist.
-3. Create `./.dev-assistant/tasks/<NN>-<task-name>/task.md`.
-4. Create `./.dev-assistant/tasks/<NN>-<task-name>/state.md` with one entry
+   - `<NNN>` = highest existing prefix + 1, zero-padded to three digits.
+     Start at `001` if no folders exist.
+3. Create `./.dev-assistant/tasks/<NNN>. <task-name>/task.md`.
+4. Create `./.dev-assistant/tasks/<NNN>. <task-name>/state.md` with one entry
    per slice from the implementation plan, in the same order:
 
        # Task State
@@ -404,7 +404,7 @@ Status prefixes:
    `sda-dev` updates the task Status and each slice's state, and appends
    file paths as it progresses through the TDD cycle.
 
-5. Confirm: _"Saved to `./.dev-assistant/tasks/<NN>-<task-name>/`. Use the
+5. Confirm: _"Saved to `./.dev-assistant/tasks/<NNN>. <task-name>/`. Use the
    **Implement** handoff to start implementation."_
 
 ### Backlog option

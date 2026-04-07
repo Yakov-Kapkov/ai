@@ -5,9 +5,9 @@ argument-hint: Describe the feature you want to design, or say "let's brainstorm
 tools: ["read", "edit", "search"]
 model: Claude Sonnet 4.6 (copilot)
 handoffs:
-  - label: Design Task
+  - label: Split into tasks
     agent: sda-task
-    prompt: "Design a task for this feature."
+    prompt: "Design tasks for this feature."
     send: true
   - label: Verify consistency
     agent: sda-feature
@@ -252,8 +252,8 @@ For each task:
    - List `.dev-assistant/features/` to see existing subfolders.
    - `<NN>` = highest existing prefix + 1, zero-padded to two digits.
      Start at `01` if no folders exist.
-3. Create `.dev-assistant/features/<NN>-<feature-name>/feature.md`.
-4. Confirm: _"Saved to `.dev-assistant/features/<NN>-<feature-name>/`.
+3. Create `.dev-assistant/features/<NN>. <feature-name>/feature.md`.
+4. Confirm: _"Saved to `.dev-assistant/features/<NN>. <feature-name>/`.
    Use the **Design Task** handoff to start planning individual
    tasks."_
 

@@ -48,53 +48,39 @@ standards, those take precedence over global defaults.
 
 ## 3. Locate the task
 
-The user provides a **task name** (e.g. `01-snowflake-config-provider`).
+The user provides a **task name** (e.g. `001. snowflake-config-provider`).
 Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered
-sequentially with a two-digit prefix (e.g. `01-`, `02-`, `03-`).
+sequentially with a three-digit prefix (e.g. `001. `, `002. `, `003. `).
 
 Each task folder contains:
 
 | File | Created by | Purpose |
 |---|---|---|
-| `task.md` | `@task-designer` | Task specification with test scenarios |
-| `state.md` | `@task-designer` | Task progress — updated by each agent |
+| `task.md` | `@sda-task` | Task specification with test scenarios |
+| `state.md` | `@sda-task` | Task progress — updated by each agent |
 
 If the task folder or `task.md` does not exist → **stop**:
-_"Task not found. Invoke the **task-designer** agent in a new chat to
+_"Task not found. Invoke the **sda-task** agent in a new chat to
 create it."_
 
 ---
 
 ## 4. state.md schema
 
-Each `state.md` tracks the task's progress at two levels — the overall
-task and each individual slice:
+Each `state.md` tracks the task's progress per slice:
 
-### Task-level status
+    # Task State
 
-| Status | Meaning | Transition rule |
-|---|---|---|
-| `pending` | No slice has been started | Initial value, set by `@sda-task-designer` |
-| `in-progress` | At least one slice has been started | Set by `@sda-dev` when the first slice moves to `RED`, `GREEN`, or `DONE` |
-| `done` | Every slice is `DONE` | Set by `@sda-dev` at the §6 Finalize step |
-
-### Slice-level status
+    ## Slices
+    1. {Slice name} — PENDING — {N} scenarios
+    2. {Slice name} — PENDING — {N} scenarios
 
 | State | Meaning | Set by |
 |---|---|---|
-| `PENDING` | Not started | `@sda-task-designer` |
+| `PENDING` | Not started | `@sda-task` |
 | `RED` | Tests written and failing | `@sda-dev` |
 | `GREEN` | Tests passing | `@sda-dev` |
 | `DONE` | Slice complete and approved | `@sda-dev` |
 
-`sda-dev` updates both the task status and each slice's state, and
-appends file paths as it progresses.
-
-Example:
-
-    # Task State
-
-    **Status:** pending
-    ## Slices
-    1. {Slice name} — PENDING — {N} scenarios
-    2. {Slice name} — PENDING — {N} scenarios
+`sda-dev` updates each slice's state and appends file paths as it
+progresses.
