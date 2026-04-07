@@ -9,7 +9,7 @@
       - resources/{lang}/standards/   (per-language standards files)
 
 .PARAMETER TargetBase
-    Path to the .copilot folder (e.g. C:\Users\C298270\.copilot).
+    Path to the .copilot folder (e.g. C:\Users\USERNAME\.copilot).
 #>
 
 param(
@@ -21,47 +21,17 @@ $ErrorActionPreference = 'Stop'
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 $RepoRoot    = $PSScriptRoot | Split-Path -Parent
-$BackupsRoot = Join-Path $TargetBase 'backups'
-$Timestamp   = Get-Date -Format 'yyyy-MM-dd_HH_mm'
-
-$SkillSrc    = Join-Path $RepoRoot 'skills\standards-compliance'
 $ResourceSrc = Join-Path $RepoRoot 'resources'
 $SkillDst    = Join-Path $TargetBase 'skills\standards-compliance'
 
 $Languages = @('python', 'typescript')
 
 # ─────────────────────────────────────────────────────────────────────────────
-Write-Host '=== Updating skill: standards-compliance ==='
+# STEPS 1-3 – BACKUP, DELETE, COPY skill folder via update-skill.ps1
+& (Join-Path $PSScriptRoot 'update-skill.ps1') -TargetBase $TargetBase -Name 'standards-compliance'
 
-# STEP 1 – BACKUP
-Write-Host '  Backup:'
-if (Test-Path $SkillDst) {
-    $BackupDir = Join-Path $BackupsRoot "standards-compliance-$Timestamp"
-    New-Item -ItemType Directory -Path (Split-Path $BackupDir) -Force | Out-Null
-    Copy-Item $SkillDst -Destination $BackupDir -Recurse -Force
-    Write-Host "    -> $BackupDir"
-} else {
-    Write-Host '    (nothing to back up)'
-}
-
-# STEP 2 – DELETE
-Write-Host '  Delete:'
-if (Test-Path $SkillDst) {
-    Remove-Item $SkillDst -Recurse -Force
-    Write-Host "    $SkillDst"
-} else {
-    Write-Host '    (nothing to delete)'
-}
-
-# STEP 3 – COPY
-Write-Host '  Copy:'
-
-# SKILL.md from skills/standards-compliance/
-New-Item -ItemType Directory -Path $SkillDst -Force | Out-Null
-Copy-Item (Join-Path $SkillSrc 'SKILL.md') -Destination $SkillDst -Force
-Write-Host '    SKILL.md'
-
-# Standards from resources/{lang}/standards/
+# STEP 4 – COPY standards from resources/{lang}/standards/
+Write-Host '  Copy standards:'
 foreach ($Lang in $Languages) {
     $Src = Join-Path $ResourceSrc "$Lang\standards"
     $Dst = Join-Path $SkillDst "standards\$Lang"

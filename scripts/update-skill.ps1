@@ -4,7 +4,7 @@
     Updates a skill folder in the target .copilot folder.
 
 .PARAMETER TargetBase
-    Path to the .copilot folder (e.g. C:\Users\C298270\.copilot).
+    Path to the .copilot folder (e.g. C:\Users\USERNAME\.copilot).
 
 .PARAMETER Name
     Skill name (e.g. commit, standards-compliance). Expects source at: skills/{Name}/.

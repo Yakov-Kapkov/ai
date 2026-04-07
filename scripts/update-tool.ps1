@@ -4,7 +4,7 @@
     Updates a tool's agent and prompt files in the target .copilot folder.
 
 .PARAMETER TargetBase
-    Path to the .copilot folder (e.g. C:\Users\C298270\.copilot).
+    Path to the .copilot folder (e.g. C:\Users\USERNAME\.copilot).
 
 .PARAMETER Name
     Tool name (e.g. sda). Expects source at: tools/{Name}/agents/ and tools/{Name}/prompts/.
