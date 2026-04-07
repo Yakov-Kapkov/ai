@@ -263,8 +263,22 @@ When the user approves (or uses the **Save** handoff):
 {1-2 sentences: what and why.}
 
 ## Design Approach
-{Brief description of the chosen approach. Reference existing codebase
-patterns being followed. Omit for small, obvious changes.}
+{Omit for small, obvious changes. One subsection per slice when
+multiple slices exist.}
+
+### {Slice name}
+
+**Problem:** {1-2 sentences — what is wrong or missing today.}
+— OR —
+**Context:** {1-2 sentences — relevant state of affairs for new features
+or refactors where nothing is "wrong".}
+
+**Solution:**
+- {what to do — one bullet per decision}
+- {another action}
+
+**Details:** {optional — omit when the solution is self-explanatory}
+- {edge case handling, backward compat, concurrency note}
 
 ## Source References
 {Omit if not based on external documents.}
@@ -272,12 +286,23 @@ patterns being followed. Omit for small, obvious changes.}
 
 ## Regression Risks
 {Omit if no regression risks were identified during discussion.}
-- **{risk}** — {which external system / contract is affected, what could
-  break, and the mitigation agreed with the user (contract test,
-  staging validation, manual check, acceptance criterion, etc.)}
+
+- ✅ **{risk name}** — {description of the risk and why it is safe.}
+  **Covered:** scenario {N}, Slice {M}
+
+- ⚠️ **{risk name}** — {description and what could break.}
+  **Mitigation:** {monitoring, staging validation, manual check, etc.}
+
+- ❌ **{risk name}** — {description and what could break.}
+  **Unresolved** — requires discussion
+
+Status prefixes:
+- ✅ = covered by a test scenario in this task
+- ⚠️ = mitigated but not test-covered (monitoring, staging, manual)
+- ❌ = identified risk, no mitigation — must be resolved before saving
 
 ## Acceptance Criteria
-- [ ] {criterion}
+- [ ] {criterion} _(Slice {N}, scenarios {X}–{Y})_
 
 ## Implementation Plan
 
@@ -310,6 +335,14 @@ patterns being followed. Omit for small, obvious changes.}
 ```
 
 ### Schema rules
+- **Design Approach** uses **Problem/Context → Solution → Details**
+  structure per slice:
+  - **Problem:** for bug fixes and regressions (what is broken today).
+  - **Context:** for new features and refactors (relevant current state).
+  - **Solution:** bullet list — one decision per bullet, no justification
+    prose (move "why" to Regression Risks or Details).
+  - **Details:** optional — edge cases, backward compat, concurrency
+    notes. Omit when the solution is self-explanatory.
 - **Slices** are vertical behaviour slices, not implementation layers. Name
   them after the behaviour: `Token refresh`, `Error responses` — not
   `Controller changes` or `Database layer`.
@@ -321,9 +354,12 @@ patterns being followed. Omit for small, obvious changes.}
   - **integration only** — wiring, config, re-exports: no tests needed.
 - **Test scenarios** use Given/When/Then format (indented bullet labels). Cover happy path, errors, edge cases.
 - **Integration items**: `{file-path}` with sub-bullets for changes.
+- **Code snippets**: every code block must have a bold file path label
+  above it: **`{file-path}` — `{symbol name}`**.
 - Item numbering is continuous across slices.
 - Every acceptance criterion must map to at least one scenario or
-  integration item.
+  integration item. Include `_(Slice N, scenarios X–Y)_` in each
+  criterion.
 - **Slice ordering matters.** List slices in the order they should be
   implemented — foundational behaviour first, dependent behaviour after.
   `sda-dev` processes slices top to bottom and never reorders them.
@@ -409,9 +445,10 @@ not part of the task.
      created before they are referenced (slice ordering is correct).
    - Every symbol named in the implementation plan is defined or
      explained somewhere in `task.md`.
-   - If `## Regression Risks` exists, each risk has a corresponding
-     mitigation (acceptance criterion, regression baseline slice, or
-     explicit "staging validation" note).
+   - If `## Regression Risks` exists:
+     - Every ✅ risk must reference a valid scenario number and slice.
+     - Every ⚠️ risk must have a concrete mitigation (not "TBD").
+     - No ❌ risks remain — all must be resolved before saving.
 
 ### 7b. External consistency (task.md against codebase)
 
