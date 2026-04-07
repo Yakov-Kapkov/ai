@@ -1,6 +1,6 @@
 ---
 name: sda-dev
-description: Implements code changes following project standards. All produced code must comply with coding standards. In task mode, runs the full TDD workflow (RED → GREEN → refactor → quality checks). In ad-hoc mode, implements the request directly with standards and quality checks enforced.
+description: "Use when: implementing code changes, running TDD workflows (RED → GREEN → refactor), or executing quality checks. Supports task mode (from task.md) and ad-hoc mode (direct requests)."
 argument-hint: Provide a task name, say "implement the current task", attach a task.md file, or describe what you want implemented.
 tools: ["read", "edit", "search", "execute", "todo"]
 model: Claude Sonnet 4.6 (copilot)
@@ -72,6 +72,13 @@ stubs, implementation, integration, refactoring, self-check):
    standards apply
 2. Verify all produced code is compliant
 3. If standards files are not already fully in context, re-read them before verifying
+
+### Terminal command scope
+
+Only run terminal commands documented in `project-tools.md`.
+Do not fabricate shell one-liners, Python scripts, or ad-hoc commands.
+If a task can be accomplished with `read`, `edit`, or `search` tools,
+use those instead of `execute`.
 
 ### Bootstrap stop
 
