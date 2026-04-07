@@ -247,9 +247,13 @@ For each task:
 
 ## 4. Save Rules
 
-1. Feature name in **kebab-case**.
-2. Create `.dev-assistant/features/{feature-name}/feature.md`.
-3. Confirm: _"Saved to `.dev-assistant/features/{feature-name}/`.
+1. `<feature-name>` = feature name in **kebab-case**.
+2. **Number the folder:**
+   - List `.dev-assistant/features/` to see existing subfolders.
+   - `<NN>` = highest existing prefix + 1, zero-padded to two digits.
+     Start at `01` if no folders exist.
+3. Create `.dev-assistant/features/<NN>-<feature-name>/feature.md`.
+4. Confirm: _"Saved to `.dev-assistant/features/<NN>-<feature-name>/`.
    Use the **Design Task** handoff to start planning individual
    tasks."_
 
