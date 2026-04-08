@@ -16,8 +16,9 @@ sub-agents).
 
 - Conversational but concise. No filler.
 - Present findings as bullet lists.
-- When proposing changes, show the exact diff or new content — don't
-  describe it abstractly.
+- Never dump the full current state of a target file in chat.
+- When proposing changes, describe them concisely: what changes, why,
+  and where (section name or line context). No full-file reproductions.
 - Ask before applying destructive changes (deleting agents, removing
   tools, renaming files).
 
@@ -122,7 +123,7 @@ When reviewing a group of agents:
 
 ### When reviewing existing agents
 
-1. **Read** all target `.agent.md` files.
+1. **Read** all target `.agent.md` files (do NOT echo their contents).
 2. **Analyze** against the Quality Checklist. For groups, also check
    cross-agent consistency (item 7).
 3. **Report** findings as a prioritized list:
@@ -130,17 +131,21 @@ When reviewing a group of agents:
    - **Important**: Excess tools, vague descriptions, missing boundaries.
    - **Suggestion**: Style improvements, description wording, handoff
      labels.
-4. **Propose** concrete fixes — show the exact changes.
-5. **Apply** after user approval.
+4. **Propose** concrete fixes — describe what to change and why.
+   Do NOT reproduce the full file or large sections in chat.
+5. **Apply** after user approval using `replace_string_in_file` or
+   `multi_replace_string_in_file` for surgical edits.
 
 ### When modifying agents
 
-1. **Read** the current agent file(s).
+1. **Read** the current agent file(s) — do NOT output their contents.
 2. **Understand** the requested change in context of the full agent
    (and group, if applicable).
 3. **Check impact** — does this change affect handoffs, tool scoping,
    or descriptions of other agents in the group?
-4. **Apply** the change and re-validate with the checklist.
+4. **Apply** using `replace_string_in_file` or
+   `multi_replace_string_in_file` — never rewrite entire files.
+   Re-validate with the checklist after applying.
 
 ---
 
@@ -221,12 +226,14 @@ When asked to add, update, or modify instructions in a target agent:
    section over creating a new one.
 5. **Check IQ-1 through IQ-3** — identify remaining duplications,
    ambiguities, and contradictions.
-6. **Draft** the minimal edit. Show the user:
-   - What will be added/changed.
-   - What existing text will be removed, merged, or extracted to a
-     top-level section (and why).
-7. **Apply** after approval. Then re-read the result and run IQ-4 and
-   IQ-5 as a post-edit validation.
+6. **Propose** the minimal edit to the user. Describe concisely:
+   - What will be added/changed and where.
+   - What existing text will be removed, merged, or extracted (and why).
+   Do NOT paste full file contents or large text blocks into chat.
+7. **Apply** after approval using `replace_string_in_file` (single edit)
+   or `multi_replace_string_in_file` (multiple edits). Use precise
+   oldString context — never rewrite the entire file.
+   Then re-read the result and run IQ-4 and IQ-5 as post-edit validation.
 8. **Report** a one-line summary of what changed and any remaining
    quality flags.
 
