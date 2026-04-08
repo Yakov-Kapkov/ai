@@ -148,10 +148,14 @@ flag differences explicitly.
 
 ### Self-containment rule
 `task.md` must be **self-contained for implementation**. The `sda-dev`
-agent works from `task.md` alone — it does not read `feature.md`.
+agent works from `task.md` alone — it does not read `feature.md` or
+explore the codebase.
 
 - Every class, type, interface, method, or concept **named** in the
   implementation plan must be **defined or explained** within `task.md`.
+- The **Changes** section within each slice is the primary mechanism:
+  it provides exact signatures, type definitions, and algorithm steps
+  so `sda-dev` can write tests and stubs without searching.
 - If based on an external source, add a `## Source References` section.
 - Before saving, scan for any name introduced without explanation.
 
@@ -318,30 +322,100 @@ Status prefixes:
 
 ### Slice 1 — {slice name}
 **Type:** tests required
+**Source:** `{path-1}`, `{path-2}`
+**Test:** `{test-path1}`, `{test-path2}`
 
-1. **{scenario}**
-   - Given: {precondition}
-   - When: {action}
-   - Then: {expected outcome}
+#### Step 1.1 — {what this step does}
 
-2. **{scenario}**
-   - Given: {precondition}
-   - When: {action}
-   - Then: {expected outcome}
+Scenarios:
+
+**1. {scenario}**
+- Given: {precondition}
+- When: {action}
+- Then: {expected outcome}
+
+**2. {scenario}**
+- Given: {precondition}
+- When: {action}
+- Then: {expected outcome}
+
+Changes:
+
+**`{ClassName}`** _(new)_
+File: `{path}`
+```{language}
+{class definition with fields and types}
+```
+
+**`{function_name}`** _(new)_
+File: `{path}`
+```{language}
+{signature with params and return type}
+```
+Implementation:
+```{language}
+{complete function body — include when ≤15 lines, no branching}
+```
+
+**`{existing_symbol}`** _(modified)_
+File: `{path}`
+1. {what to change — anchor with first line of target code}
+   ```{language}
+   {replacement code}
+   ```
+2. After `{anchor line}`, add:
+   ```{language}
+   {new code}
+   ```
+
+#### Step 1.2 — {what this step does}
+
+Scenarios:
+
+**3. {scenario}**
+- Given: {precondition}
+- When: {action}
+- Then: {expected outcome}
+
+Changes:
+
+**`{function_name}`** _(new, non-trivial)_
+File: `{path}`
+```{language}
+{signature}
+```
+Algorithm:
+1. {step}
+2. If {condition} → {action}, else → {action}
+3. Return {result}
 
 ### Slice 2 — {slice name}
 **Type:** tests only
+**Source:** `{source-file-path}`
+**Test:** `{test-file-path}`
 
-3. **{scenario}**
-   - Given: {precondition}
-   - When: {action}
-   - Then: {expected outcome}
+#### Step 2.1 — {what this step does}
+
+Scenarios:
+
+**4. {scenario}**
+- Given: {precondition}
+- When: {action}
+- Then: {expected outcome}
+
+Changes:
+
+**`{symbol_name}`**
+File: `{source-file-path}`
+```{language}
+{signature}
+```
 
 ### Slice 3 — {slice name}
 **Type:** integration only
 
-4. **`{file-path}`**
-   - {change description}
+**5. `{file-path}`**
+- {change description}
 ```
 
 ### Schema rules
@@ -362,10 +436,49 @@ Status prefixes:
   - **tests only** — existing behaviour that lacks tests: write tests
     that pass against existing code.
   - **integration only** — wiring, config, re-exports: no tests needed.
-- **Test scenarios** use Given/When/Then format (indented bullet labels). Cover happy path, errors, edge cases.
+- **Changes** is mandatory for `tests required` and `tests only`
+  slices. It provides `sda-dev` with everything it needs to write
+  tests and stubs without exploring the codebase.
+- **Steps** group related changes and the scenarios that verify them.
+  Each step is a `#### Step N.M — {description}` subheading within
+  a slice. A step contains `Scenarios:` followed by `Changes:`.
+  - A slice with one logical change has one step.
+  - A slice with independent changes (e.g. a refactor + a guard)
+    has multiple steps.
+  - `sda-dev` implements all steps within a slice before the gate.
+  - Scenario numbering is continuous across all steps and slices.
+- **Source** and **Test** accept one or more comma-separated file paths.
+  For new files, this is the creation path. For existing files, this
+  is the modification target. `sda-dev` creates or edits at these
+  exact paths — no guessing.
+- **Symbol layout:** each symbol in a Changes block gets a two-line
+  header:
+  - Line 1: **`\`symbol_name\`** _(new/modified)_` — bold symbol
+    name with operation tag. This is what readers scan for.
+  - Line 2: `File: \`path/to/file.ext\`` — the file where it lives.
+  Content follows directly below (no bullet nesting).
+  - **New symbols:** signature code block, then optionally one of:
+    - `Implementation:` + code block (≤15 lines, no branching —
+      sda-dev uses verbatim after standards compliance).
+    - `Algorithm:` + numbered prose steps (branching, loops, >5 lines).
+    Include exactly one. Omit both only for pure type/model definitions.
+  - **Modified symbols:** numbered modification steps. Each step
+    describes one change: what to replace/add and where. Anchor with
+    a recognizable line from the existing code (first line of the
+    target block). Provide the new code in a fenced block.
+  - **Imports:** list non-obvious imports (third-party, cross-module)
+    as a separate symbol entry or inline with the symbol that needs
+    them. Omit standard-library and same-module imports.
+  If the information would duplicate what is already in Design Approach
+  for this slice, a cross-reference is sufficient:
+  `See Design Approach > {Slice name} for {detail}.`
+- **Scenarios** are numbered bold paragraphs (`**1. {name}**`) under
+  each step's `Scenarios:` label, before the `Changes:` block.
+- **Test scenarios** use Given/When/Then format (flat bullet labels,
+  not indented). Cover happy path, errors, edge cases.
 - **Integration items**: `{file-path}` with sub-bullets for changes.
-- **Code snippets**: every code block must have a bold file path label
-  above it: **`{file-path}` — `{symbol name}`**.
+- **Code snippets**: every code block must have the symbol header
+  (bold name + `File:` line) above it.
 - Item numbering is continuous across slices.
 - Every acceptance criterion must map to at least one scenario or
   integration item. Include `_(Slice N, scenarios X–Y)_` in each

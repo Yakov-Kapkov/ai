@@ -7,7 +7,7 @@ model: Claude Sonnet 4.6 (copilot)
 handoffs: 
   - label: Run Quality Checks
     agent: sda-dev
-    prompt: Run all quality checks.
+    prompt: Run all quality checks related to the current task implemented slices(task mode) or for affected code(ad-hoc mode).
     send: true
 ---
 
@@ -56,6 +56,12 @@ label itself is not printed — only the blockquote content.
 Global standards provide the baseline. If the workspace contains local
 standards, local rules take precedence over global ones on any conflict.
 
+**Standards vs existing code:** Standards define correctness. Existing
+code within in-scope files shows local idiom (mock style, fixture
+patterns, naming). Use local idiom when it complies with standards.
+When it violates standards, follow standards. Never explore outside
+scope to learn patterns.
+
 Write compliant code from the start — do not write non-compliant code
 and fix it after. Before presenting code at any checkpoint (tests,
 stubs, implementation, integration, refactoring, self-check):
@@ -71,10 +77,24 @@ Do not fabricate shell one-liners, Python scripts, or ad-hoc commands.
 If a task can be accomplished with `read`, `edit`, or `search` tools,
 use those instead of `execute`.
 
+### Zero exploration in task mode
+
+`task.md` is the complete blueprint. In task mode, do not:
+- Search the codebase for types, imports, or conventions.
+- Read files not listed in the current slice's **Source** / **Test**.
+- Infer signatures or file paths — use exactly what the Changes blocks provide.
+- Run `grep_search` or `semantic_search` for any reason.
+
+If `task.md` is missing information needed to write tests or implement
+a slice, **stop and report:**
+_"Slice {N} is missing {what}. Cannot proceed without it."_
+Do not attempt to fill the gap by exploring.
+
 ### Bootstrap stop
 
-When bootstrap step 2 says **STOP**, print its message exactly and end
-your response. Do not reason, search, or initialize anything yourself.
+When bootstrap step 1 says **HARD STOP** (missing `project-tools.md`),
+print its message exactly and end your response. Do not reason, search,
+or initialize anything yourself.
 
 ### Slice approval gates
 
@@ -157,31 +177,36 @@ range. Never run ad-hoc terminal commands to inspect files.
 ### Task mode
 
 User references a task name, says "implement the current task", or
-attaches a `task.md`. All standards from §1 apply.
+attaches a `task.md`.
 
-a. **Read bootstrap step 3** to locate the task folder.
+a. **Read bootstrap §3 (Locate the task)** to find the task folder.
 
 b. **Read `state.md`.** Note the task-level `Status` field. Find the first non-DONE slice:
    - `PENDING` → determine type from `task.md` (TDD, tests only,
      or integration).
-   - `RED` → resuming — read the test file from task.md, skip to GREEN.
+   - `RED` → resuming — read the test file(s) listed in the current
+     slice, skip to GREEN.
    - `GREEN` → resuming — present for approval, then mark DONE.
    - All `DONE` → warn user, ask whether to proceed.
 
 c. **Read `task.md`** — identify slices (tests required vs integration
-   only).
+   only). Do **not** read any source or test files during setup.
+   File reading happens in §3, scoped to the current slice's
+   **Source** / **Test** fields only. Ignore the **Source References**
+   section — it is design context for humans, not a file list.
 
 ### Ad-hoc mode
 
-No task reference. All standards from §1 apply. Explore the codebase
-around referenced files, then implement directly. Skip state tracking,
-slice loop, and finalize.
+No task reference. Explore the codebase
+around referenced files, then implement directly. Skip state tracking
+(§3 Slice Loop, §4 Refactoring Pass). §5 Quality Checks and §6 Finalize
+still apply.
 
 **Exploring the codebase:**
 - Read relevant source files in full — signatures, types, dependencies.
-- Read existing test files — patterns, fixtures, assertion style.
+- For patterns and local idiom, apply the **Standards vs existing
+  code** rule from Constraints.
 - Identify path conventions for new files.
-- Note constraints: circular imports, DI patterns, async conventions.
 
 **Output:** nothing — silent.
 
@@ -206,55 +231,69 @@ For each slice, check its type in `task.md`:
 
 Then silence until the next checkpoint.
 
-**File scope:** For each slice, read **only** the files listed in that
-slice's section of `task.md` — source files, test files, and any example
-files explicitly referenced. Do not read adjacent files, config files,
-or explore the repo to "understand context". Do not run search queries
-to discover types or imports — use only the files listed in the slice.
+**File scope:** The **Zero exploration** constraint applies per slice.
+Read only the files listed in the slice’s **Source** and **Test** fields.
 
 ---
 
 ### Write Tests (TDD + Tests-Only)
 
-**Determine `expected-result` (for `tests required` slices only):**
-- All source files in the slice already exist → treat as `GREEN` (tests-only).
-- Any source file does not exist yet → `RED` (TDD).
-
-For `tests only` slices, `expected-result` is always `GREEN`.
+**Determine `expected-result`:**
+- `tests required` → `RED`. Tests target new behaviour; they fail
+  until implementation. File existence only affects whether stubs are
+  needed (Pre-check handles that).
+- `tests only` → `GREEN`. Tests cover existing behaviour.
 
 #### Pre-check — before writing any test
 
-Scan every symbol the tests will import or call. For each one, check
-whether it exists in the source file:
-- **Does not exist** → add a stub first.
+Use the **Changes** blocks of the current slice in `task.md` as
+the sole reference for imports, signatures, and types. Do not search
+the codebase or read files beyond those listed in the slice.
+
+For each symbol listed in the Changes blocks, read the source file
+listed in the slice and check whether the symbol exists:
+- **Does not exist** → add a stub using the signature from Changes.
 - **Exists** → no action needed.
 
 Tests must compile and resolve all imports before running. A compile
 error is not a valid RED state — RED means tests run and fail an
 assertion or throw from a stub.
 
+After Pre-check, proceed to write tests immediately. Do not analyse
+execution paths, trace call chains, or reason about whether scenarios
+will pass or fail. The expected-result is already determined above.
+
 #### Stub rules
 
 Stubs are temporary but must conform to all coding standards.
 
 **Source file does not exist yet** — create at the exact production path:
+- Use signatures and type definitions from the Changes blocks in `task.md`.
 - Function/method bodies: throw an unambiguous "not implemented" error.
 - Constants: real value if known, otherwise a typed placeholder.
-- Export only symbols the tests reference — nothing more.
+- Export only symbols listed in the Changes blocks — nothing more.
 
 **Source file exists but is missing symbols:**
-- Functions/methods → add stub export with correct signature, body
-  throws "not implemented".
-- Types/interfaces → add minimal type definition (empty `{}` if shape
-  unknown).
+- Functions/methods → add stub with the signature from Changes,
+  body throws "not implemented".
+- Types/interfaces → add definition from Changes (or minimal `{}`
+  if Changes shows only the name).
 - Constants/enum values → real value if known, otherwise typed placeholder.
-- Do not modify existing entries. Add only what the tests reference.
+- Do not modify existing entries. Add only symbols listed in Changes.
 
 #### Test writing rules
 
 Before finalising, apply standards compliance enforcement.
 
 Additional constraints:
+- Derive each test directly from its scenario's Given/When/Then.
+  Given = arrange, When = act, Then = assert. Do not trace source
+  code execution paths to decide what to mock or assert.
+- For setup, fixtures, and mock patterns: extract patterns from
+  existing tests in the slice's test file. If those patterns comply
+  with coding/testing standards, replicate them. If they violate
+  standards, follow the standards instead. Do not reason about mock
+  internals or language mechanics.
 - Cover **only** the scenarios listed in the slice. No extra edge cases.
 - Bug-fix slices: write one failing reproduction test first, then
   regression tests.
@@ -271,8 +310,7 @@ no test, write the missing test(s) before proceeding to the gate.
 Run the exact test command (specific file only — never suite-wide).
 
 **When `expected-result: RED`:**
-- Valid RED: assertion fails, stub throws "not implemented", or compile
-  error.
+- Valid RED: assertion fails or stub throws "not implemented".
 - Tests pass unexpectedly → one attempt to revise so they genuinely
   fail. Re-run. If still passing → report failure, do not continue.
 
@@ -313,11 +351,19 @@ Wait for approval. If user requests changes → revise, re-verify, stop again.
 
 Write only what is needed to pass the tests.
 
+- If the Changes block includes an **Implementation** code block, use
+  it verbatim (apply standards compliance, then paste).
+- If the Changes block includes an **Algorithm**, follow its steps to
+  write the implementation.
+- If neither is present, derive the minimal implementation from the
+  test expectations and the signature in the Changes block.
+
 Parallel edits allowed only for isolated leaf files with fixed interfaces.
 When in doubt, go sequential. Never parallelize across slices.
 
-Run the tests. Fix implementation (not tests) on failure. Update
-`state.md` → `GREEN`.
+Run the tests. Fix implementation (not tests) on failure — max
+3 attempts. If tests still fail after 3 fixes, report failure and
+stop. Update `state.md` → `GREEN`.
 
 #### 🛑 HARD STOP — GREEN gate
 
@@ -381,12 +427,14 @@ Non-testable actions: file merges/deletes, import updates, wiring,
 config entries, exports.
 
 1. Read target files.
-2. Apply changes per conventions and standards.
+2. Apply changes following the **Standards vs existing code** rule.
 3. Run relevant existing tests to verify nothing broke.
 
 #### 🛑 HARD STOP — integration gate
 
 > End your response. Do not start the next slice.
+
+Update `state.md` → `DONE`.
 
 **Output:**
 > ### Changes applied
@@ -404,7 +452,7 @@ config entries, exports.
 >
 > Ready to proceed to Slice {next N}: {name}?
 
-After approval → update `state.md` → `DONE`.
+Wait for approval.
 
 ---
 
@@ -476,9 +524,10 @@ If any slice is not `DONE`, report it before proceeding.
 
 ### Self-check (both modes, mandatory)
 
-Verify every rule from the loaded coding standards is met in all
-produced/modified code. If standards files are not already fully in
-context, re-read them before verifying.
+Confirm that §4 Refactoring Pass ran (task mode) or that all produced
+code was verified against standards during implementation (ad-hoc mode).
+Report pass/fail — do not re-read standards or re-verify if §4 already
+covered it.
 
 **Output:**
 > ### Summary
