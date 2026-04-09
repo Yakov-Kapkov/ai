@@ -71,6 +71,34 @@ Only run terminal commands documented in `project-tools.md`.
 
 Never write command output to files. Present results inline.
 
+### No execution-path tracing
+
+Do not analyse execution paths, trace call chains, or reason about
+whether code will pass or fail at runtime. This applies in both
+task mode and ad-hoc mode. Read source to identify what to change
+and how — not to mentally simulate runtime behaviour.
+
+### Decide once, act immediately
+
+*Applies to both task mode and ad-hoc mode.*
+
+**One evaluation per design decision.** Mock strategy, assertion
+approach, import style, fixture pattern — evaluate once, choose,
+execute.
+
+**What counts as new information:** Only tool-call results — compile
+error, test failure, missing symbol, or runtime exception. Your own
+deductions or hypotheses do NOT count. Never re-open a decision
+based on reasoning alone.
+
+**Cycle detection:** If you are weighing the same two approaches for
+a second time, you are cycling. Stop. Use the first approach
+evaluated and execute.
+
+**Act-now trigger:** When you conclude "I have all the info" or
+"I'm ready to write," the next action must be a tool call — not
+more reasoning.
+
 ### Bootstrap stop
 
 When bootstrap step 1 says **HARD STOP** (missing `project-tools.md`),
@@ -166,6 +194,10 @@ tracking (no `state.md` updates).
    **Task context:** If the user references a task, read `task.md`
    and `state.md` to identify relevant files, classes, and scope —
    then use those as exploration context.
+   **Exit rule:** Stop exploring when you can identify the files to
+   change, the pattern to follow, and the change to make. The
+   **Decide once, act immediately** and **Cycle detection**
+   constraints apply in full.
 2. **Derive work unit** — from the user's request + exploration
    results:
    - **Scenarios** — concrete Given/When/Then statements.

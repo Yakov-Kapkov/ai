@@ -121,7 +121,16 @@ Do not attempt to fill the gap by exploring.
 If the slice has no **Test Context** section and writing tests requires
 any of the above, stop and report.
 
+### No execution-path tracing
+
+Do not analyse execution paths, trace call chains, or reason about
+whether code will pass or fail at runtime. This applies in both
+task mode and ad-hoc mode. Read source to identify what to change
+and how — not to mentally simulate runtime behaviour.
+
 ### Decide once, act immediately
+
+*Applies to both task mode and ad-hoc mode.*
 
 **Test Context is the authority for test code patterns.** When Test
 Context specifies a mock approach, use it verbatim — even if coding
@@ -277,6 +286,13 @@ tracking (no `state.md` updates).
    **Task context:** If the user references a task, read `task.md`
    and `state.md` to identify relevant files, classes, and scope —
    then use those as exploration context.
+   **Exit rule:** Stop reading when you can identify the files to
+   change, the pattern to follow, and the change to make. The
+   **Decide once, act immediately** and **Cycle detection**
+   constraints apply in full — do not re-evaluate approaches,
+   trace execution paths, or deliberate on tangential style
+   decisions (e.g., adding comments or annotations the user did
+   not request).
 2. **Derive work unit** — from the user's request + codebase context:
    - **Scenarios** — concrete Given/When/Then statements.
    - **Source / Test files** — paths for production and test code.
@@ -361,9 +377,9 @@ Tests must compile and resolve all imports before running. A compile
 error is not a valid RED state — RED means tests run and fail an
 assertion or throw from a stub.
 
-After Pre-check, proceed to write tests immediately. Do not analyse
-execution paths, trace call chains, or reason about whether scenarios
-will pass or fail. The expected-result is already determined above.
+After Pre-check, proceed to write tests immediately. The
+**No execution-path tracing** constraint applies — the
+expected-result is already determined above.
 
 #### Stub rules
 
