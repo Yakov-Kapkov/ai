@@ -1,18 +1,37 @@
 # SDA — Software Development Assistant
 
-A streamlined suite of three coordinated AI agents that implement Specification Driven Development approach. The system is **handoff-driven** — each agent completes its phase and passes control to the next via structured handoffs. Users invoke agents directly at any stage.
+A suite of coordinated AI agents that implement a Specification-Driven Development workflow. The system is **handoff-driven** — each agent completes its phase and passes control to the next. Users can invoke any agent directly at any stage.
+
+```
+sda-init  →  sda-system  →  sda-feature  →  sda-task  →  sda-dev / sda-dev-orc
+(once)       (design)       (features)      (tasks)      (implement)
+```
 
 ---
 
 ## Agents
 
-| Agent | Role | Model | User-invokable | Tools |
-|---|---|---|---|---|
-| `sda-init` | Detects project toolchain, writes `project-tools.md` and `project-config.json` | Claude Haiku 4.5 | ✅ (once per project) | read, search, edit |
-| `sda-feature-designer` | Brainstorms, designs, and produces a structured feature specification | Claude Sonnet 4.6  | ✅ | read, edit, search, web |
-| `sda-dev` | Writes failing tests, makes them pass, refactors, and runs quality checks | Claude Sonnet 4.6 | ✅ | read, edit, search, execute |
+### Pipeline agents
 
-All three agents are user-invokable. `sda-init` is run once per project; `sda-feature-designer` and `sda-dev` are used per task.
+| Agent | Role | Model | Tools |
+|---|---|---|---|
+| `sda-init` | Detects project toolchain, writes `project-tools.md` and `project-config.json` | Claude Haiku 4.5 | read, search, edit |
+| `sda-system` | System architecture design — components, contracts, diagrams | Claude Sonnet 4.6 | read, edit, search, agent |
+| `sda-feature` | Feature-level design through collaborative brainstorming | Claude Sonnet 4.6 | read, edit, search |
+| `sda-task` | Designs atomic task specs (`task.md`) with test scenarios and implementation plans | Claude Sonnet 4.6 | read, edit, search |
+| `sda-dev` | TDD implementation — monolithic (RED → GREEN → refactor) and quality checks | Claude Sonnet 4.6 | read, edit, search, execute, todo |
+| `sda-dev-orc` | TDD implementation — orchestrator variant that delegates to subagents for reduced context | Claude Sonnet 4.6 | read, edit, execute, agent |
+
+### Subagents (invoked by `sda-dev-orc`)
+
+| Agent | Role | Model | Tools |
+|---|---|---|---|
+| `sda-test-writer` | Writes tests for TDD slices (RED) and tests-only slices | Claude Sonnet 4.6 | read, edit, search, execute |
+| `sda-coder` | Implements production code (GREEN), integration slices, and refactoring | Claude Sonnet 4.6 | read, edit, search, execute |
+
+`sda-dev` and `sda-dev-orc` are interchangeable — use `sda-dev` for simple tasks, `sda-dev-orc` for complex multi-slice tasks where context size causes reasoning loops.
+
+All pipeline agents are user-invokable. `sda-init` is run once per project; the rest are used as needed.
 
 ---
 
@@ -23,7 +42,7 @@ All three agents are user-invokable. `sda-init` is run once per project; `sda-fe
 1. Copy the [`.dev-assistant/`](.dev-assistant/) folder from this repo into your project root.
 2. Copy the language folder(s) you need from [`../../resources/`](../../resources/) into `.dev-assistant/resources/`.
 
-You should see something like this:
+Your project should have:
 
 ```
 <your-project>/
@@ -31,9 +50,7 @@ You should see something like this:
     └── resources/
         ├── bootstrap.md
         ├── project-config.example.json
-        └── typescript/
-            └── tool-discovery.md
-        └── <another language>/
+        └── <language>/          (e.g. typescript/, python/)
             └── tool-discovery.md
 ```
 
@@ -51,13 +68,13 @@ See the [Standards Compliance README](../../skills/standards-compliance/README.m
 
 ### 3. Run the `sda-init` agent
 
-Invoke the `sda-init` agent(or /sda-init prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
+Invoke the `sda-init` agent (or the `/sda-init` prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
 
 ---
 
 ## Usage
 
-### 1. Initialize the project (once) - **sda-init** agent
+### 1. Initialize the project (once) — `sda-init`
 
 Invoke the `sda-init` agent in a new chat:
 
@@ -67,33 +84,43 @@ Set up the TDD workflow for this project.
 
 `sda-init` will scan your project, present its findings, and — after your approval — write `project-tools.md` and `project-config.json`.
 
-### 2. Design a feature - **sda-feature-designer** agent
+### 2. Design system architecture (optional) — `sda-system`
 
-Invoke the `sda-feature-designer` agent and describe your task:
-
-```
-Add an endpoint that returns a paginated list of orders filtered by status.
-```
+For larger efforts, start with system-level design:
 
 ```
-Refactor UserRepository to extract a separate QueryBuilder class.
+Design the architecture for the notification subsystem.
 ```
 
-The agent will collaborate with you on the design and save a `feature.md` to a numbered task folder.
+Produces a `design.md` with components, contracts, and diagrams. Hands off to `sda-feature` when ready.
 
-### 3. Implement - **sda-dev** agent
-
-Invoke the `sda-dev` agent and reference your task:
+### 3. Design a feature — `sda-feature`
 
 ```
-Implement the current feature.
+Design a feature for paginated order listing filtered by status.
+```
+
+The agent collaborates on the design, challenges over-engineering, and saves a `feature.md`. Hands off to `sda-task` to split into tasks.
+
+### 4. Design a task — `sda-task`
+
+```
+Design a task for the order list endpoint.
+```
+
+Produces a `task.md` with test scenarios, implementation plan, and `state.md` for tracking. Hands off to `sda-dev` for implementation.
+
+### 5. Implement — `sda-dev`
+
+```
+Implement the current task.
 ```
 
 ```
 Implement task 03-order-list-endpoint.
 ```
 
-For quick, one-off changes without a feature spec, describe the task directly (ad-hoc mode):
+For quick, one-off changes without a task spec (ad-hoc mode):
 
 ```
 Fix the bug where createOrder throws when quantity is 0.

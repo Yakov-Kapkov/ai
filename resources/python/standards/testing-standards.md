@@ -1,21 +1,14 @@
 # Testing Standards
 
-**INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY rules for writing quality tests. Follow these when writing ANY test code.
-
 ## Table of Contents
 
 - [Import Organization](#import-organization)
-- [Unit Test Scope](#unit-test-scope)
-- [Behavioral Testing](#tests-must-be-behavioral-not-structural)
+- [No Environment Variable Dependencies](#no-environment-variable-dependencies)
 - [Async Testing](#async-testing)
 - [Test Data Creation](#test-data-creation)
-- [Fixture Usage](#fixture-usage)
-- [Test Structure: AAA](#test-structure-aaa)
+- [Test Setup / Fixtures](#test-setup--fixtures)
 - [Test Parameterization](#test-parameterization)
-- [Test Constants](#test-constants)
 - [Mocking Best Practices](#mocking-best-practices)
-- [Derive Expected Values from Mocked Data](#derive-expected-values-from-mocked-data)
-- [Test Quality Checklist](#test-quality-checklist)
 
 ## Import Organization (MANDATORY)
 
@@ -31,86 +24,35 @@ from tests.unit.common_flows import InputModel  # Should be relative
 from ...skills_sdk.flow_storage import InMemoryStorage  # Should be absolute
 ```
 
-## Unit Test Scope (MANDATORY)
+## No Environment Variable Dependencies (MANDATORY)
 
-**RULE**: Unit tests MUST test only ONE module. All other modules MUST be mocked.
-
-```python
-# ✅ CORRECT: All dependencies mocked
-class TestDocumentProcessor:
-    @pytest.mark.asyncio
-    async def test_process_document(self) -> None:
-        # Arrange
-        mock_llm = AsyncMock()
-        mock_storage = AsyncMock()
-        processor = DocumentProcessor(mock_llm, mock_storage)
-        # Act
-        result = await processor.process("test.pdf")
-        # Assert
-        assert result.success
-
-# ❌ WRONG: Real dependencies (integration test)
-llm_client = RealLLMClient()  # Not mocked!
-processor = DocumentProcessor(llm_client, storage)
-```
-
-**What to mock in unit tests:**
-- ✅ External API clients (LLM, Document Understanding, etc.)
-- ✅ Database connections and ORM instances
-- ✅ File system operations
-- ✅ Other modules from your codebase
-- ✅ Time/date functions (for deterministic tests)
-
-**What NOT to mock:**
-- ✅ Standard library data structures (list, dict, set)
-- ✅ The specific module you're testing
-- ✅ Simple value objects and dataclasses
-
-### Tests Must Be Behavioral, Not Structural (MANDATORY)
-
-**RULE**: Tests MUST verify **observable behavior** (inputs → outputs, side effects, HTTP responses), NOT internal implementation details (SQL strings, bind parameter positions, internal method call order, private state).
-
-**Why this matters**: Structural tests break when you refactor internals even though behavior is unchanged. They test *how* code works instead of *what* it does, creating brittle tests that resist improvement.
+**RULE**: Unit tests MUST NOT fail because of missing environment variables. If the code under test reads `os.environ` / `os.getenv()`, the test MUST provide values via `monkeypatch.setenv()` or a `conftest.py` fixture.
 
 ```python
-# ❌ WRONG: Structural — asserts on SQL internals and parameter positions
-def test_pagination_sql(self, client: TestClient, mock_db: AsyncMock) -> None:
-    client.get("/api/items", params={"page": 1, "page_size": 10})
-    call_args = mock_db.execute.call_args[0][0]
-    assert "LIMIT" in call_args.text       # Coupled to SQL shape
-    assert call_args.params[-2] == 11      # Coupled to param order
+# ✅ CORRECT: fixture provides env — runs anywhere
+@pytest.fixture
+def _env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("API_URL", "https://test-api")
+    monkeypatch.setenv("REGION", "us")
 
-# ✅ CORRECT: Behavioral — asserts on the API response
-def test_first_page_returns_correct_metadata(self, client: TestClient, mock_db: AsyncMock) -> None:
+def test_client_uses_region(self, _env: None) -> None:
     # Arrange
-    mock_db.execute.return_value = mock_rows
-
+    client = ServiceClient()
     # Act
-    response = client.get("/api/items", params={"page": 1, "page_size": 10})
-
+    result = client.endpoint
     # Assert
-    assert response.status_code == 200
-    assert response.json()["metadata"]["page"] == 1
-    assert response.json()["metadata"]["page_size"] == 10
-    assert len(response.json()["items"]) == expected_count
+    assert "us" in result
+
+# ❌ WRONG: KeyError when env var is missing
+def test_client_uses_region(self) -> None:
+    client = ServiceClient()  # crashes without $env:REGION
 ```
 
-**Structural test red flags — avoid these assertions:**
-- SQL text content (`"LIMIT" in query.text`)
-- Bind parameter positions or values (`params[-2]`)
-- Internal method call counts (`.assert_called_once()`) unless the call *is* the behavior (e.g., verifying an email was sent)
-- Private/internal state inspection (`obj._internal_field`)
-- Argument shapes passed between internal layers
-
-**What to assert instead:**
-- HTTP status codes and response bodies
-- Return values from public APIs
-- Observable side effects (data written, events emitted, external calls made)
-- Error messages shown to the user
+**Scope:** Unit tests only. Integration tests may use real env vars (CI secrets, `.env` files).
 
 ## Async Testing (MANDATORY)
 
-**RULE**: Use `@pytest.mark.asyncio` and `async def` for async tests.
+**RULE**: Use `async`/`await` for async tests. Un-awaited calls cause false passes.
 
 ```python
 # ✅ CORRECT
@@ -129,9 +71,9 @@ def test_async_processing() -> None:
 
 ## Test Data Creation (MANDATORY)
 
-**RULE**: When creating test data that simulates database rows or API responses, use `None` for nullable fields.
+**RULE**: When creating test data that simulates database rows or API responses, use `None` for nullable fields, NOT missing keys.
 
-**Why this matters**: Database `NULL` values serialize to JSON `null` / Python `None`. Using missing keys or other placeholders creates unrealistic test scenarios.
+**Why**: Database `NULL` values serialize to JSON `null`.
 
 ```python
 # ✅ CORRECT: Test data simulating database/API response
@@ -148,14 +90,13 @@ mock_database_row = {
 ```
 
 **When to use `None` in test data:**
-- ✅ Simulating database rows with nullable columns
-- ✅ Mocking API responses with optional fields
-- ✅ Testing data transformation from external sources
-- ✅ Any test data representing deserialized JSON
+- Simulating database rows with nullable columns
+- Mocking API responses with optional fields
+- Any test data representing deserialized JSON
 
-## Fixture Usage (MANDATORY)
+## Test Setup / Fixtures (MANDATORY)
 
-**RULE**: Extract repeated setup code into fixtures immediately.
+**RULE**: Extract repeated setup code into fixtures or helper functions immediately.
 
 ```python
 # ✅ CORRECT: Fixture eliminates duplication
@@ -180,29 +121,9 @@ def test_batch() -> None:
     sample_documents = [create_document(f"doc_{i}") for i in range(3)]  # Duplicated
 ```
 
-## Test Structure: AAA (MANDATORY)
-
-**RULE**: Use exact comments: `# Arrange`, `# Act`, `# Assert` (no extra text).
-
-```python
-# ✅ CORRECT
-def test_functionality(self) -> None:
-    # Arrange
-    expected_progress = 0.5
-    mock_update = AsyncMock()
-    # Act
-    context = ProcessingContext(mock_update, 3)
-    await context.complete_step("extraction")
-    # Assert
-    assert abs(mock_update.call_args[0][0] - expected_progress) < FLOAT_PRECISION_TOLERANCE
-
-# ❌ WRONG: Verbose comments
-# Arrange: Set up test data  # Too verbose
-```
-
 ## Test Parameterization
 
-**RULE**: Use `@pytest.mark.parametrize` when same Act/Assert logic, different Arrange data.
+**RULE**: Use parameterization (`@pytest.mark.parametrize`) when same Act/Assert logic, different Arrange data.
 
 ```python
 # ✅ CORRECT: Parameterized
@@ -218,131 +139,37 @@ def test_initialized_flow(): ...  # 30 lines
 def test_resuming_flow(): ...     # 30 nearly identical lines
 ```
 
-**When to parameterize**: Same logic, different inputs | Boundary conditions  
+**When to parameterize**: Same logic, different inputs | Boundary conditions
 **When NOT to**: Different test logic | Single scenario
-
-## Test Constants
-
-**Use LOCAL constants**: Expected/assertion values in ONE test only  
-**Use DIRECT literals**: In `@pytest.mark.parametrize`, mock-only values, simple setup  
-**Use GLOBAL constants**: Value asserted in 2+ tests, shared fixture values, test infrastructure
-
-**Avoid:**
-- ❌ Global for single-test values
-- ❌ Math with globals (`GLOBAL + 1`)
-- ❌ Globals just for parametrize
-- ❌ Globals for coincidentally identical values testing different things
-
-```python
-# ✅ Local - test-specific assertion value
-def test_retry(self):
-    expected_max_retries = 6  # Local - used only here
-    client = create_client(max_retries=expected_max_retries)
-    assert client.max_retries == expected_max_retries
-
-# ✅ Direct literals - parametrize
-@pytest.mark.parametrize("count", [1, 5, 10])  # Direct literals
-def test_retries(self, count): ...
-
-# ✅ Global - asserted in multiple tests
-SAMPLE_DOCUMENT_COUNT = 3  # Used in fixture and asserted in multiple tests
-FLOAT_PRECISION_TOLERANCE = 1e-10  # Used across many tests
-
-@pytest.fixture
-def sample_documents():
-    return [create_document(f"doc_{i}") for i in range(SAMPLE_DOCUMENT_COUNT)]
-
-def test_processing(sample_documents):
-    result = process(sample_documents)
-    assert len(result.documents) == SAMPLE_DOCUMENT_COUNT  # Global
-```
-
-**Atomic replacement**: When creating a constant, replace ALL occurrences or don't create it.
 
 ## Mocking Best Practices
 
-**RULE**: Use `patch.object` for mocking methods and attributes. NEVER use direct assignment.
+| Scenario | Approach | Auto-restores? |
+|---|---|---|
+| All instances share one mock | `patch.object` (context manager or decorator) | Yes |
+| Different behavior per instance | `object.__setattr__` on each instance | No (fresh objects per test) |
+| Module-level function or constant | `@patch("module.name")` | Yes |
+
+### Shared mock — `patch.object`
 
 ```python
-# ✅ CORRECT: Use patch.object for methods
-with patch.object(pipeline.document_downloader, 'download_document', 
-                  new_callable=AsyncMock, return_value=sample_doc) as mock_download:
+with patch.object(downloader, 'download_document',
+                  new_callable=AsyncMock, return_value=sample_doc) as mock_dl:
     result = await pipeline.process()
-    mock_download.assert_called_once()
-
-# ✅ CORRECT: Use patch.object as decorator
-@patch.object(DocumentDownloader, 'download_document', new_callable=AsyncMock)
-async def test_process(mock_download):
-    mock_download.return_value = sample_doc
-    result = await pipeline.process()
-
-# ✅ CORRECT: Patch multiple methods
-with patch.object(downloader, 'download_document', new_callable=AsyncMock) as mock_dl, \
-     patch.object(downloader, 'cleanup_document', new_callable=Mock) as mock_cleanup:
-    await pipeline.process()
-    mock_cleanup.assert_called_once()
-
-# ❌ WRONG: Direct assignment (causes mypy errors)
-pipeline.document_downloader.download_document = AsyncMock()  # mypy error!
-pipeline.document_downloader.cleanup_document = Mock()  # mypy error!
+    mock_dl.assert_called_once()
 ```
 
-## Derive Expected Values from Mocked Data (MANDATORY)
+### Per-instance mock — `object.__setattr__`
 
-**RULE**: Every value in an assertion that originates from a mock, fixture, or test
-constant **MUST** be referenced from that source — never re-typed as a literal.
-This applies to **all** mock-originated values: object fields, computed strings,
-IDs, timestamps, emails, numbers, config values, etc.
+Use when different instances need different behavior. Bypasses
+Pydantic / ORM `__setattr__` overrides.
 
-**Field mapping — assert via mock object:**
 ```python
-mock_row = {
-    "ID": "collection-001",
-    "USER_ID": "user@example.com",
-    "CREATED_AT": "2026-01-01T10:00:00Z",
-}
-mock_client.fetch_rows.return_value = [mock_row]
+object.__setattr__(step0, "check_status", AsyncMock(return_value=Context()))
+object.__setattr__(step1, "check_status", AsyncMock(
+    side_effect=lambda **kw: setattr(step1, "progress", 0.25) or Context()
+))
 
-# ❌ WRONG: Re-hardcoded strings from mock_row
-assert logs[0].id == "collection-001"
-assert logs[0].created_at == "2026-01-01T10:00:00Z"
-
-# ✅ CORRECT: Derived from mock_row
-assert logs[0].id == mock_row["ID"]
-assert logs[0].created_at == mock_row["CREATED_AT"]
+# ❌ WRONG: Plain assignment on a Pydantic model — may raise
+step1.check_status = AsyncMock()
 ```
-
-**Computed strings — derive from config:**
-```python
-mock_config = {"DATABASE": "DB", "SCHEMA": "SCH"}
-FOLDERS_VIEW = "FOLDERS_VW"
-
-# ❌ WRONG: Hardcoded duplicate of mock values
-assert "DB.SCH.FOLDERS_VW" in call_args.sql_text
-
-# ✅ CORRECT: Fully derived from mock
-expected_table = f"{mock_config['DATABASE']}.{mock_config['SCHEMA']}.{FOLDERS_VIEW}"
-assert expected_table in call_args.sql_text
-```
-
-**Why**: If the mock value changes, the assertion breaks immediately — catching
-the mismatch at edit time instead of producing a false-green test.
-
-## Test Quality Checklist
-
-**MANDATORY**:
-- [ ] Behavioral assertions only: test observable outputs/responses, never SQL strings, bind positions, or internal call structure
-- [ ] Absolute imports for production, relative for test utilities
-- [ ] All parameters have type annotations
-- [ ] New code has >95% test coverage
-- [ ] Fixtures used for all common setup (no duplication)
-- [ ] AAA structure with clean comments: `# Arrange`, `# Act`, `# Assert`
-- [ ] Unit tests mock all dependencies except module under test
-- [ ] Async tests use `@pytest.mark.asyncio` and `AsyncMock`
-- [ ] Same Act+Assert logic uses `@pytest.mark.parametrize`
-- [ ] Expected values derived from mocks, not re-hardcoded
-- [ ] Local constants for single-test assertions
-- [ ] Global constants ONLY for multi-test assertions
-- [ ] Direct literals in parametrize and mock-only values
-- [ ] Zero unnecessary global constants
-- [ ] Proper mocking with `patch.object`

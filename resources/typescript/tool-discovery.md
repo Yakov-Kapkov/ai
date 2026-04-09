@@ -1,4 +1,3 @@
-````markdown
 # Repository Tool Discovery
 
 **Copilot scans and discovers:**
@@ -121,5 +120,3 @@ Ready to save these commands to project-tools.md?
 - Confirm: "Project tool discovery complete ✓"
 - **✋ STOP and ask:** "Ready to continue with the current task?"
 - **WAIT for explicit approval** before proceeding with the current task
-
-````

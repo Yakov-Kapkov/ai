@@ -1,6 +1,6 @@
 # tdd-workflow agent
 
-A suite of six coordinated AI agents that enforce a strict Test-Driven Development lifecycle. The orchestrator drives every phase — research, test writing, implementation, and quality auditing — by delegating to focused subagents. It never writes code.
+A suite of five coordinated AI agents that enforce a strict Test-Driven Development lifecycle. The orchestrator drives every phase — test writing and implementation — by delegating to focused subagents. It never writes code. A companion feature-designer agent handles research and planning.
 
 ---
 
@@ -10,10 +10,9 @@ A suite of six coordinated AI agents that enforce a strict Test-Driven Developme
 |---|---|---|---|---|
 | `tdd-workflow` | Master orchestrator | Claude Sonnet 4.6 | ✅ | read, search, agent |
 | `tdd-tool-discovery` | Detects project toolchain, writes `project-tools.md` | Claude Haiku 4.5 | ❌ | read, search, edit |
-| `tdd-research` | Read-only codebase analysis, returns a technical brief | Claude Sonnet 4.6 | ❌ | read, search |
 | `tdd-test-writer` | Writes failing tests only (RED phase) | Claude Sonnet 4.6 | ❌ | read, edit, search, execute |
 | `tdd-implementer` | Writes production code + refactors (GREEN + REFACTOR) | Claude Sonnet 4.6 | ❌ | read, edit, search, execute |
-| `tdd-quality-gate` | Source-file audit — magic values, design principles, docs | Claude Haiku 4.5 | ❌ | read |
+| `feature-designer` | Researches, designs, and plans features and tasks | Claude Sonnet 4.6 | ✅ | read, edit, search, web |
 
 Only `tdd-workflow` is meant to be invoked by the user. All other agents are
 internal subagents that the orchestrator calls.
@@ -27,23 +26,15 @@ PHASE 0 — BOOTSTRAP
   Detect language, verify config files, classify task type.
   If project-tools.md is missing → invoke tdd-tool-discovery.
 
-PHASE 1 — RESEARCH
-  Invoke tdd-research with the task description.
-  Receive a technical brief: affected files, contracts, test scenarios.
-
-PHASE 2 — RED
+PHASE 1 — RED
   Invoke tdd-test-writer (initial), present tests to user.
   Loop on user feedback (revision invocations) until explicit approval.
 
-PHASE 3 — GREEN
-  Invoke tdd-implementer with approved tests + research brief.
+PHASE 2 — GREEN
+  Invoke tdd-implementer with approved tests.
   Re-invoke if tests are still failing.
 
-PHASE 4 — QUALITY‑GATE  (optional — user chooses yes/no after Phase 3)
-  Invoke tdd-quality-gate for a source-file audit.
-  If failures found, invoke tdd-implementer once to fix them.
-
-PHASE 5 — COMPLETE
+PHASE 3 — COMPLETE
   Print final summary: task, test count, coverage %, files changed.
 ```
 
@@ -51,11 +42,10 @@ PHASE 5 — COMPLETE
 
 | User intent | Task type | Phases run |
 |---|---|---|
-| Add feature / implement X | `new-feature` | 0 → 1 → 2 → 3 → 4 → 5 |
-| Fix bug | `bug-fix` | 0 → 1 → 2 (repro test first) → 3 → 4 → 5 |
-| Refactor (renames, extractions, signature changes) | `refactoring — code-affecting` | 0 → 1 → 2 → 3 → 4 → 5 |
-| Refactor (comments, docs, formatting only) | `refactoring — cosmetic` | 0 → 1 → **skip 2 & 3** → 4 → 5 |
-| Review / check quality | `code-review` | 0 → 1 → **skip 2 & 3** → 4 → 5 |
+| Add feature / implement X | `new-feature` | 0 → 1 → 2 → 3 |
+| Fix bug | `bug-fix` | 0 → 1 (repro test first) → 2 → 3 |
+| Refactor (renames, extractions, signature changes) | `refactoring — code-affecting` | 0 → 1 → 2 → 3 |
+| Refactor (comments, docs, formatting only) | `refactoring — cosmetic` | 0 → **skip 1 & 2** → 3 |
 
 ---
 
@@ -83,7 +73,7 @@ coverage, and run specific files. Must exist before Phase 1 proceeds.
 
 ### Standards files
 
-Read in full by `tdd-test-writer`, `tdd-implementer`, and `tdd-quality-gate`
+Read in full by `tdd-test-writer` and `tdd-implementer`
 before doing any work. Every rule in them is treated as mandatory — there are
 no optional guidelines.
 

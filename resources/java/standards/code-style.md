@@ -12,21 +12,23 @@
 
 **Why**: Makes variable boundaries visible, especially for UUIDs, file paths, user input with spaces/special chars.
 
-```typescript
+```java
 // ✅ CORRECT
-throw new Error(`Flow '${flowId}' not found`);
-throw new Error(`File '${filePath}' does not exist`);
-logger.error(`Failed to process flow`, { flowId, status: flowStatus });
+throw new IllegalArgumentException(String.format("Flow '%s' not found", flowId));
+throw new IllegalStateException(String.format("File '%s' does not exist", filePath));
+logger.error("Failed to process flow", Map.of("flowId", flowId, "status", flowStatus));
 
 // ❌ WRONG
-throw new Error(`Flow ${flowId} not found`);
-logger.info("Processing flow", { flowId: `'${flowId}'` });  // Don't quote structured logging values
+throw new IllegalArgumentException("Flow " + flowId + " not found");
+logger.info("Processing flow", Map.of("flowId", "'" + flowId + "'")); // Don't quote structured logging values
 ```
 
 ## File-Level Documentation
 
 **Do not add file-level header block comments.** Documentation comments
-apply to exported functions, classes, and methods only — not to files.
+apply to exported classes, methods, and fields only — not to files.
+Each Java source file contains exactly one top-level class; the class-level
+Javadoc serves as the file's documentation.
 
 ## API Documentation Standards
 
@@ -45,36 +47,35 @@ Additional sections as applicable:
 
 **Document the symbol itself** — describe what *this* function/class does, not where it is called from. Callers change; the contract is what matters.
 
-**Format:** TSDoc tags (`@param`, `@returns`, `@throws`).
+**Format:** Javadoc tags in order: `@param`, `@return`, `@throws`, `@deprecated`.
 
-```typescript
+```java
 // ✅ CORRECT
 /**
  * Factory and cache for SnowflakeService instances.
  *
- * @description Maintains a static map keyed by SnowflakeType. On first call for a
+ * <p>Maintains a static map keyed by SnowflakeType. On first call for a
  * given type, creates the SnowflakeService using the matching config provider and
  * caches it. Subsequent calls return the cached instance.
  */
-export class SnowflakeServiceProvider { /* … */ }
+public class SnowflakeServiceProvider { /* … */ }
 
 /**
- * Extract obligations from a document by ID.
+ * Extracts obligations from a document by ID.
  *
- * @description Validates the document ID, retrieves content from storage, runs the
+ * <p>Validates the document ID, retrieves content from storage, runs the
  * obligations extraction pipeline, and returns a structured result.
  *
- * @param documentId - Unique identifier for the document
- * @param content - Raw document content to process
- * @param options - Optional processing configuration
- * @returns Processing result with extracted obligations
- * @throws {DocumentNotFoundError} If document doesn't exist
+ * @param documentId unique identifier for the document
+ * @param content    raw document content to process
+ * @param options    optional processing configuration, may be {@code null}
+ * @return processing result with extracted obligations
+ * @throws DocumentNotFoundException if document doesn't exist
  */
-async function processDocument(
-  documentId: string,
-  content: string,
-  options?: ProcessingOptions
-): Promise<ProcessingResult> {
-  // Implementation
+public ProcessingResult processDocument(
+        String documentId,
+        String content,
+        ProcessingOptions options) {
+    // Implementation
 }
 ```

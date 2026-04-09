@@ -8,7 +8,14 @@
 
 ```
 resources/
+├── common-standards.md              ← language-agnostic rules
 ├── development-workflow.md          ← shared, language-independent
+├── java/
+│   ├── tool-discovery.md
+│   └── standards/
+│       ├── coding-standards.md
+│       ├── testing-standards.md
+│       └── code-style.md
 ├── python/
 │   ├── tool-discovery.md
 │   └── standards/
@@ -29,6 +36,7 @@ resources/
 
 | File | Purpose | When to Use |
 |------|---------|-------------|
+| **[common-standards.md](common-standards.md)** | Language-agnostic rules (SOLID, AAA, behavioral testing) | Loaded for all languages automatically |
 | **[development-workflow.md](development-workflow.md)** | TDD process, review criteria, quality gates | Starting new work, understanding TDD workflow |
 | **coding-standards.md** | Core technical rules for production code | Writing production code: types, constants, imports |
 | **testing-standards.md** | How to write quality tests | Writing any test code: structure, AAA, mocking |
@@ -66,6 +74,14 @@ What are you doing?
 
 ### coding-standards.md
 
+**Java** (`java/standards/`):
+- Type annotations (MANDATORY, NEVER use raw types or `Object`)
+- Records/classes with Bean Validation vs plain Maps
+- Optional for nullable returns
+- Enums over string/integer constants
+- Magic number/string prevention
+- Import organization (no wildcards, grouped by origin)
+
 **TypeScript** (`typescript/standards/`):
 - SOLID principles
 - Type annotations (MANDATORY, NEVER use `any`)
@@ -83,21 +99,27 @@ What are you doing?
 
 ### testing-standards.md
 
+**Java** (`java/standards/`):
+- `@BeforeEach` setup and helper functions
+- Test parameterization (`@ParameterizedTest`, `@CsvSource`, `@MethodSource`)
+- Mocking best practices (Mockito `@Mock`, `@InjectMocks`, `mockStatic`)
+
 **TypeScript** (`typescript/standards/`):
 - Test setup functions and utilities
-- AAA structure (Arrange-Act-Assert)
 - Test parameterization (`it.each` / `describe.each`)
-- Test constants guidelines
 - Mocking best practices (`vi.spyOn`, `vi.mock`)
 
 **Python** (`python/standards/`):
 - Fixture usage (eliminate duplication)
-- AAA structure (Arrange-Act-Assert)
 - Test parameterization (`@pytest.mark.parametrize`)
-- Test constants guidelines
 - Mocking best practices (`patch.object`)
 
 ### code-style.md
+
+**Java** (`java/standards/`):
+- String formatting (quote variables)
+- No file-level block comments (class Javadoc serves as file doc)
+- Javadoc standards (Summary + description + `@param` / `@return` / `@throws`)
 
 **TypeScript** (`typescript/standards/`):
 - String formatting (quote variables)
@@ -136,6 +158,8 @@ What are you doing?
 **Disputes**: Cite specific file + section in PR discussions.
 
 ## Framework-Specific Notes
+
+**Java**: Examples use JUnit 5 and Mockito. Ensure a static analysis tool (Checkstyle, SpotBugs, or Error Prone) is configured. Use records for immutable value objects.
 
 **TypeScript**: Examples use Jest/Vitest syntax but principles apply to Mocha or other frameworks. Ensure `strict: true` in `tsconfig.json`. ESLint should enforce these standards where possible.
 

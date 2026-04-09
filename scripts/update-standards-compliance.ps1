@@ -24,13 +24,26 @@ $RepoRoot    = $PSScriptRoot | Split-Path -Parent
 $ResourceSrc = Join-Path $RepoRoot 'resources'
 $SkillDst    = Join-Path $TargetBase 'skills\standards-compliance'
 
-$Languages = @('python', 'typescript')
+$Languages = Get-ChildItem -Path $ResourceSrc -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName 'standards') } |
+    ForEach-Object { $_.Name }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STEPS 1-3 – BACKUP, DELETE, COPY skill folder via update-skill.ps1
 & (Join-Path $PSScriptRoot 'update-skill.ps1') -TargetBase $TargetBase -Name 'standards-compliance'
 
-# STEP 4 – COPY standards from resources/{lang}/standards/
+# STEP 4 – COPY common-standards.md from resources/
+$CommonSrc = Join-Path $ResourceSrc 'common-standards.md'
+$StandardsDst = Join-Path $SkillDst 'standards'
+if (Test-Path $CommonSrc) {
+    New-Item -ItemType Directory -Path $StandardsDst -Force | Out-Null
+    Copy-Item $CommonSrc -Destination $StandardsDst -Force
+    Write-Host "    standards\common-standards.md"
+} else {
+    Write-Warning "    Common standards not found: $CommonSrc"
+}
+
+# STEP 5 – COPY standards from resources/{lang}/standards/
 Write-Host '  Copy standards:'
 foreach ($Lang in $Languages) {
     $Src = Join-Path $ResourceSrc "$Lang\standards"

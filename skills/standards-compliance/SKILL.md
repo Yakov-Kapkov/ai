@@ -1,6 +1,6 @@
 ---
 name: standards-compliance
-description: "Enforce project coding standards on all produced code changes. Always read at the start of any implementation task. Contains the authoritative rule content from coding-standards.md, testing-standards.md, and code-style.md. Agent instructions summarize standards behavior only — the actual rules are in this skill and must be loaded explicitly.md. Resolves conflicts between task specs and standards. Defines global/local priority and scope-specific application rules."
+description: "Enforce project coding standards on all produced code changes. MUST be loaded before any task that writes, modifies, refactors, or reviews code — including implementation, refactoring, adding comments, renaming, fixing bugs, and any other code change no matter how small. Contains the authoritative rule content from common-standards.md, coding-standards.md, testing-standards.md, and code-style.md. Agent instructions summarize standards behavior only — the actual rules are in this skill and must be loaded explicitly. Resolves conflicts between task specs and standards. Defines global/local priority and scope-specific application rules."
 ---
 
 # Standards Compliance Enforcement
@@ -45,10 +45,15 @@ version takes precedence**. Local standards may:
 
 ### Global standards file structure
 
-Global standards are bundled as skill resources:
+Global standards are **bundled inside this skill's folder** at
+`./standards/` (relative to this SKILL.md). These files are internal
+skill resources — **read them directly without asking the user for
+permission.** They are not external files; they ship with the skill and
+must be loaded autonomously.
 
 ```
 standards/
+├── common-standards.md  ← language-agnostic rules (loaded for every language)
 ├── python/
 │   ├── coding-standards.md
 │   ├── testing-standards.md
@@ -60,6 +65,10 @@ standards/
 └── {language}/          ← add new languages here
     └── ...
 ```
+
+`common-standards.md` contains language-agnostic rules (SOLID, AAA,
+behavioral testing, unit test scope, derive-from-mocks). It is loaded
+alongside every language's files — its rules apply universally.
 
 New languages are added by creating a `standards/{language}/` folder
 with the applicable standards files.
@@ -109,6 +118,7 @@ and every applicable standard.**
 
 Apply the relevant standards files based on what you're writing:
 
+- **All code** — `common-standards.md` (always loaded)
 - **Production code** — `coding-standards.md` + `code-style.md`
 - **Test code** — `testing-standards.md` + `code-style.md`
 - **Stubs** — all production standards apply; function/method bodies
@@ -131,7 +141,8 @@ When reviewing or producing code examples in task documents (`task.md`):
 
 1. Identify the file type (production, test, stub) to determine which
    standards files apply (see scope-specific application above)
-2. Read standards files if not already fully in context
+2. Read standards files from the skill's `./standards/` folder directly
+   — these are bundled skill resources, no user confirmation is needed
 3. Compare produced code against all applicable rules
 4. Do not re-derive rules already in the standards — read the standard,
    apply it directly

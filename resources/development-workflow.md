@@ -1,7 +1,5 @@
 # Development Workflow
 
-**INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY language-independent rules for development process, TDD, and quality gates. Follow these for ALL code you write, regardless of language.
-
 ## Table of Contents
 
 - [Test-Driven Development (TDD)](#test-driven-development-tdd)

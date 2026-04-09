@@ -1,22 +1,10 @@
 # Coding Standards
 
-**INSTRUCTION FOR AI ASSISTANT**: These are MANDATORY technical rules for writing production TypeScript code. Every rule marked MANDATORY is non-negotiable.
-
 ## Table of Contents
 
-- [Core Principles](#core-principles)
 - [Type Safety and Strongly-Typed Patterns](#type-safety-and-strongly-typed-patterns)
 - [Magic Number/String Prevention](#magic-numberstring-prevention)
 - [Import Organization](#import-organization)
-
-## Core Principles
-
-### SOLID Design Principles
-- **Single Responsibility**: Each class/function has one clear purpose
-- **Open/Closed**: Extensible without modification
-- **Liskov Substitution**: Derived classes are substitutable for base classes
-- **Interface Segregation**: Clean, focused interfaces
-- **Dependency Inversion**: Depend on abstractions, not implementations
 
 ## Type Safety and Strongly-Typed Patterns
 
@@ -24,75 +12,30 @@
 
 **RULE**: For ALL data models, API models, and configuration objects, use Zod schemas for runtime validation or TypeScript interfaces for compile-time checking.
 
-**Why Zod is recommended for API boundaries**: Runtime validation, automatic type inference, schema-based parsing, environment variable validation, and comprehensive error messages.
-
 **Note on null vs undefined**: For database/API models, use `| null` for nullable fields rather than optional properties (`?`). Database `NULL` and API `null` map to TypeScript `null`, not `undefined`. See `@testing-standards.md` for test data guidance.
 
 ```typescript
 import { z } from 'zod';
 
-// ✅ CORRECT: Database/API model with explicit null types
-interface FileRow {
-  DOC_ID: string;
-  PARENT: string | null;     // Database NULL maps to null
-  COLLECTION: string | null; // API null maps to null
-}
-
 // ✅ CORRECT: Zod for API models with runtime validation
 const DocumentResponseSchema = z.object({
   documentId: z.string(),
   status: z.string(),
-  result: z.record(z.unknown()).nullable(), // API can return null
+  result: z.record(z.unknown()).nullable(),
 });
-
 type DocumentResponse = z.infer<typeof DocumentResponseSchema>;
-
-// ✅ CORRECT: Parse JSON from API with validation
 const response = DocumentResponseSchema.parse(JSON.parse(jsonString));
-
-// ✅ CORRECT: Zod for configuration with environment variables
-const AppConfigSchema = z.object({
-  llmApiKey: z.string(),
-  llmModel: z.string().default('gpt-4'),
-  maxRetries: z.number().int().default(3),
-});
-
-type AppConfig = z.infer<typeof AppConfigSchema>;
-
-const config = AppConfigSchema.parse({
-  llmApiKey: process.env.LLM_API_KEY,
-  llmModel: process.env.LLM_MODEL,
-  maxRetries: Number(process.env.MAX_RETRIES),
-});
 
 // ❌ WRONG: Plain object - no validation, typos undetected
 const requestData = { documentId: "123", conent: "text" };  // Typo undetected!
 ```
 
-**When to use Zod:**
-- ✅ **ALWAYS** for API request/response models
-- ✅ **ALWAYS** for parsing external data (APIs, files, user input)
-- ✅ **ALWAYS** for configuration with environment variables
-- ✅ For complex domain models requiring runtime validation
-
-**When to use TypeScript interfaces/types instead:**
-- Internal data structures with compile-time checking only
-- Simple data transfer objects within the application
-- Type definitions that don't need runtime validation
-- Performance-critical code where validation overhead matters
-
-**Key Zod features to use:**
-- `.parse()`: Parse and validate data (throws on error)
-- `.safeParse()`: Parse and validate, returns result object
-- `z.infer<typeof Schema>`: Extract TypeScript type from schema
-- `.default()`: Provide default values
-- Custom refinements for complex validation
+**When to use Zod**: API request/response, parsing external data, configuration with env vars, complex domain models requiring runtime validation.
+**When to use interfaces**: Internal data structures, simple DTOs, type definitions without runtime validation.
 
 ### Type Annotations (MANDATORY)
 
-**RULE**: EVERY function and method parameter MUST have a type annotation. EVERY function and method MUST have a return type annotation. NEVER use `any` type. Zero exceptions.
-
-**Why this matters**: Catches errors at compile time, enables IDE autocomplete, makes code self-documenting, enables safe refactoring.
+**RULE**: EVERY function/method parameter and return type MUST have a type annotation. NEVER use `any` type. Zero exceptions.
 
 ```typescript
 // ✅ CORRECT: All parameters and return types annotated
@@ -104,46 +47,17 @@ function processDocuments(
   // Implementation
 }
 
-// ✅ CORRECT: Async functions with proper typing
-async function processDocumentsAsync(
-  documents: Document[],
-  context: ProcessingContext
-): Promise<ProcessingResult> {
-  // Implementation
-}
-
-// ✅ CORRECT: Test functions with type annotations
-describe('processDocuments', () => {
-  it('should process documents correctly', (): void => {
-    const sampleDocuments: Document[] = createSampleDocuments();
-    const result: ProcessingResult = processDocuments(sampleDocuments, mockContext);
-    expect(result.success).toBe(true);
-  });
-});
-
 // ❌ WRONG: Missing type annotations
 function processDocuments(documents, context, timeout = 30) {  // Missing all types
   // Implementation
 }
-
-// ❌ WRONG: Using 'any' type
-function processDocuments(documents: any, context: any): any {  // NEVER use 'any'
-  // Implementation
-}
 ```
 
-**Applies to:**
-- ✅ All production code functions/methods
-- ✅ All test functions
-- ✅ Arrow functions
-- ✅ Return types (use `: void` for procedures)
-- ✅ Use `unknown` instead of `any` when type is truly unknown
+**Applies to**: All production code, test functions, arrow functions. Use `: void` for procedures, `unknown` instead of `any`.
 
 ### Prefer Specific Types Over `undefined` (MANDATORY)
 
-**RULE**: Do not use `undefined` in types when a more specific alternative exists. `undefined` weakens type safety — it forces every consumer to add a null-check that could be avoided with better design.
-
-**Prefer these alternatives:**
+**RULE**: Do not use `undefined` in types when a more specific alternative exists.
 
 | Instead of | Use |
 |---|---|
@@ -159,39 +73,17 @@ function findUser(id: string): User | null {
   return row ?? null;
 }
 
-// ✅ CORRECT: Default value eliminates undefined
-function createClient(timeout: number = 30): Client {
-  return new Client({ timeout });
-}
-
-// ✅ CORRECT: Throw when absence is an error
-function getUser(id: string): User {
-  const user = db.query(id);
-  if (!user) throw new UserNotFoundError(id);
-  return user;
-}
-
 // ❌ AVOID: undefined as return value
 function findUser(id: string): User | undefined {
   return db.query(id);  // undefined leaks from implementation detail
 }
-
-// ❌ AVOID: Optional parameter when a default makes sense
-function createClient(timeout?: number): Client {
-  return new Client({ timeout: timeout ?? 30 });  // Unnecessary undefined handling
-}
 ```
 
-**Exceptions — when `undefined` is acceptable:**
-- ✅ Object properties using `?` syntax where the key may not exist at all
-- ✅ Destructured values from external APIs that return `undefined`
-- ✅ Map/Array `.get()` / `.find()` results (standard library returns `undefined`)
+**Exceptions**: Object properties using `?` syntax, destructured values from external APIs, Map/Array `.get()` / `.find()` results.
 
-### Use Interfaces/Types, Not Plain Objects
+### Use Interfaces/Types, Not Plain Objects (MANDATORY)
 
 **RULE**: For structured data (error contexts, configuration, structured logs), use typed interfaces or types instead of plain objects.
-
-**Why this matters**: Plain object keys are strings - typos cause runtime failures. TypeScript interfaces are validated at compile time. IDE autocomplete works. Refactoring is safe.
 
 ```typescript
 // ✅ CORRECT: Strongly-typed interface
@@ -201,87 +93,43 @@ interface LlmErrorContext {
   httpStatusCode?: number;
 }
 
-function createErrorContext(
-  provider: string,
-  model: string,
-  status?: number
-): LlmErrorContext {
-  return { llmProvider: provider, llmModel: model, httpStatusCode: status };
-}
-
 const context: LlmErrorContext = createErrorContext('openai', 'gpt-4');
 
-// ❌ AVOID: Plain object with inline type (typos cause compile errors, but less maintainable)
-const context = { 
-  llmProvider: "openai", 
-  llmModle: "gpt-4"  // Typo undetected if not using interface!
-};
+// ❌ AVOID: Plain object - typos undetected
+const context = { llmProvider: "openai", llmModle: "gpt-4" };  // Typo undetected!
 ```
 
-**Use for**: Error contexts, configuration objects, structured log data, API models
-**Prefer interfaces over types for**: Object shapes (better error messages, can be extended)
-**Prefer types for**: Unions, intersections, mapped types, utility types
+**Use for**: Error contexts, configuration objects, structured log data, API models.
+**Prefer interfaces over types for**: Object shapes. **Prefer types for**: Unions, intersections, mapped types.
 
-## Magic Number/String Prevention
-
-### Production Code: No Magic Numbers or Strings
+## Magic Number/String Prevention (MANDATORY)
 
 **RULES**:
-- ✅ **ALWAYS give names to numeric/string literals**: Create constants with descriptive names
-- ❌ **NEVER use bare numbers or strings** like `0.09`, `"extraction"`, `1e-10` directly in production code
-- ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — these are magic values too. Name them: `const CHAR_SEPARATOR = ''`, `const WORD_SEPARATOR = ' '`.
-- ✅ **Calculate derived values** when there's a logical relationship (`FINAL_RETRY = MAX_RETRIES - 1`)
-- ✅ **Use dynamic calculations** from data when appropriate (`array.length`)
-- ❌ **DON'T create constants from arbitrary math** like `SECOND_VALUE = FIRST_VALUE + 1` when there's no logical connection
+- ✅ **ALWAYS name numeric/string literals**: Create descriptive constants
+- ❌ **NEVER use bare numbers/strings** like `0.09`, `"extraction"`, `1e-10`
+- ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — name them: `const CHAR_SEPARATOR = ''`
+- ✅ **Calculate derived values** when logical relationship exists (`FINAL_RETRY = MAX_RETRIES - 1`)
 
-**NOTE**: Test code has different rules - see `@testing-standards.md`. In particular: assertion values that originate from a mock or fixture object **must** be derived from that object (`mockRow.TOTAL_COUNT`), not re-typed as a literal (`5`).
-
-### Production Code Standards
+**NOTE**: Test code has different rules — see `@testing-standards.md`.
 
 ```typescript
 // ✅ CORRECT: Named constants — including empty and whitespace strings
 const MIN_PROGRESS_VALUE = 0.0;
 const MAX_PROGRESS_VALUE = 1.0;
 const EXTRACTION_WEIGHT = 0.09;
-const EXTRACTION_STEP_TYPE = "extraction";
-const CHAR_SEPARATOR = '';      // ✅ empty string as a named constant
-const WORD_SEPARATOR = ' ';    // ✅ whitespace string as a named constant
-
-if (value < MIN_PROGRESS_VALUE || value > MAX_PROGRESS_VALUE) {
-  throw new Error(
-    `Value must be between ${MIN_PROGRESS_VALUE} and ${MAX_PROGRESS_VALUE}`
-  );
-}
-
-// ❌ AVOID: Magic numbers and magic strings — including empty strings
-if (value < 0.0 || value > 1.0) {
-  throw new Error("Value must be between 0.0 and 1.0");
-}
-return value.split('').reverse().join('');   // ❌ '' is a magic string
-```
-
-### Constants Organization
-
-```typescript
-// Production constants with descriptive names
-const MIN_PROGRESS_VALUE = 0.0;
-const MAX_PROGRESS_VALUE = 1.0;
-const FLOAT_PRECISION_TOLERANCE = 1e-10;
-const EXTRACTION_STEP_TYPE = "extraction";
-const EXTRACTION_WEIGHT = 0.09;
-
-// Calculated constants for meaningful relationships
+const CHAR_SEPARATOR = '';
+const WORD_SEPARATOR = ' ';
 const DEFAULT_TIMEOUT_SECONDS = 5;
-const EXTENDED_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS * 3;  // Extended is 3x default
-const MAX_RETRY_ATTEMPTS = 3;
-const FINAL_RETRY_ATTEMPT = MAX_RETRY_ATTEMPTS - 1;  // Final attempt is last index
+const EXTENDED_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS * 3;
+
+// ❌ WRONG: Magic numbers and strings
+if (value < 0.0 || value > 1.0) { throw new Error("out of range"); }
+return value.split('').reverse().join('');   // '' is a magic string
 ```
 
 ### Union Types: Derive From Constants
 
-**RULE**: When a union type corresponds to a set of named string/number constants, group the constants into a single `as const` object and derive the type using `(typeof OBJ)[keyof typeof OBJ]`. Never write the string literals twice.
-
-**Why this matters**: Single source of truth — adding, removing, or renaming a value requires only one edit. The derived type updates automatically.
+**RULE**: When a union type corresponds to named string/number constants, group them into a single `as const` object and derive the type. Never write string literals twice.
 
 ```typescript
 // ✅ CORRECT: const object + derived type
@@ -293,38 +141,24 @@ export const DIRECTIONS = {
 } as const;
 
 export type Direction = (typeof DIRECTIONS)[keyof typeof DIRECTIONS];
-
-// ✅ CORRECT: reference values through the object — never via aliases
 const dir: Direction = DIRECTIONS.NORTH;
 
-// ❌ WRONG: string literals duplicated in both the object and a separate type
-export type Direction = 'north' | 'east' | 'south' | 'west';  // duplicated literals
-export const DIRECTIONS = { NORTH: 'north', ... } as const;   // same literals again
-
-// ❌ WRONG: individual alias constants are redundant and must not be created
-export const DIRECTION_NORTH = DIRECTIONS.NORTH;  // just use DIRECTIONS.NORTH directly
-export const DIRECTION_EAST  = DIRECTIONS.EAST;   // same — alias adds nothing
+// ❌ WRONG: string literals duplicated in both object and type
+export type Direction = 'north' | 'east' | 'south' | 'west';
+export const DIRECTIONS = { NORTH: 'north', ... } as const;
 ```
 
-
-## Import Organization
-
-### Import Organization (Standard ES6)
+## Import Organization (MANDATORY)
 
 **RULES**:
-- ✅ **ALL imports at the top**: First thing after file comments, before any other code
-- ✅ **Group imports in order**: (1) External libraries, (2) Internal modules, (3) Types
-- ✅ **One import per line** for clarity (or use multi-line for multiple items)
+- ✅ **ALL imports at the top**: First thing in file, before any other code
+- ✅ **Group in order**: (1) External libraries, (2) Internal modules, (3) Types
+- ✅ **One import per line**: Exception — multiple items from same module OK
 - ❌ **NEVER import inside functions**: No imports inside functions, methods, or conditionals
-- ❌ **No conditional imports**: Exception: dynamic imports for code splitting
-
-### Import Organization Example
+- ❌ **No conditional imports**: Exception — dynamic imports for code splitting
 
 ```typescript
 // ✅ CORRECT: All imports at top, properly organized
-/**
- * Document processing pipeline module.
- */
 
 // External library imports
 import { z } from 'zod';
@@ -334,60 +168,14 @@ import structlog from 'structlog';
 import { Document } from '@/common/models';
 import { DocumentObligationExtraction } from '@/oes-skill/models';
 
-// Type imports (can be separate or inline with 'type' keyword)
+// Type imports
 import type { ProcessingContext, ProcessingResult } from '@/types';
 
 // Initialize logger once at module level
 const logger = structlog.getLogger();
 
-class Pipeline {
-  async process(): Promise<void> {
-    try {
-      // Use logger directly - no inline imports
-      logger.info('Processing started');
-      // ... processing logic ...
-    } catch (error) {
-      logger.error('Error occurred', { error });
-      throw error;
-    }
-  }
-}
-```
-
-### Common Import Anti-Patterns
-
-```typescript
-// ❌ AVOID: Inline/conditional imports
+// ❌ WRONG: Inline imports
 function processData(): void {
   const structlog = require('structlog');  // Should be at top of file
-  const logger = structlog.getLogger();    // Should be module-level
-}
-
-// ❌ AVOID: Imports in exception handlers
-try {  
-  // ... code ...
-} catch (error) {
-  const structlog = require('structlog');  // Should be at top of file
-  const logger = structlog.getLogger();
-  logger.error('Error occurred', { error });
-}
-
-// ✅ CORRECT: Module-level imports and logger
-import structlog from 'structlog';
-const logger = structlog.getLogger();
-
-function processData(): void {
-  try {
-    // ... code ...
-  } catch (error) {
-    logger.error('Error occurred', { error });
-    throw error;
-  }
-}
-
-// ✅ CORRECT: Dynamic imports for code splitting (acceptable exception)
-async function loadHeavyModule(): Promise<void> {
-  const { heavyFunction } = await import('./heavy-module');
-  heavyFunction();
 }
 ```

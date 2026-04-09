@@ -17,6 +17,10 @@ handoffs:
     agent: sda-dev
     prompt: Implement the current task
     send: true
+  - label: Implement (orchestrated)
+    agent: sda-dev-orc
+    prompt: Implement the current task
+    send: true
 ---
 
 # Task Designer
@@ -162,7 +166,7 @@ explore the codebase.
 ### Code examples must comply with standards
 Any executable code in `task.md` (imports, function signatures, class
 definitions, type annotations) must follow the applicable coding standards.
-Behavioral descriptions (Given/When/Then prose, acceptance criteria text)
+Behavioral descriptions (`Given`/`When`/`Then` prose, acceptance criteria text)
 are exempt — they describe intent, not code.
 
 Before saving `task.md`, read the relevant coding standards (if not
@@ -250,9 +254,17 @@ paths.
 When you have enough clarity (user has answered your questions):
 1. **Now** do targeted code reads if needed — only the specific files
    relevant to implementation.
-2. Present the full `task.md` draft.
-3. Ask: _"Anything you'd change or add?"_
-4. Iterate based on feedback until the user is happy.
+2. **Populate Test Context** for each `tests required` / `tests only`
+   slice. Read the test file (or closest related test file) and the
+   source file to extract:
+   - Fixture/mock patterns already in use.
+   - Object construction recipes (constructor args, required fields).
+   - Mock boundaries (what to patch, response shapes).
+   Distill into the three-bullet Test Context format. Do not copy
+   entire test files — extract only the reusable patterns.
+3. Present the full `task.md` draft.
+4. Ask: _"Anything you'd change or add?"_
+5. Iterate based on feedback until the user is happy.
 
 ### Saving
 When the user approves (or uses the **Save** handoff):
@@ -324,6 +336,28 @@ Status prefixes:
 **Type:** tests required
 **Source:** `{path-1}`, `{path-2}`
 **Test:** `{test-path1}`, `{test-path2}`
+
+#### Test Context
+
+**Patterns:**
+- {pattern}: {when to use} _(scenarios {N, M})_
+- {pattern}: {when to use} _(scenario {X})_
+
+**Object construction:**
+Baseline:
+```{language}
+{one assignment per line — shared setup used by most scenarios}
+```
+Variations:
+- Scenario {N}: {what differs from baseline and why}
+- Scenario {M}: {what differs from baseline and why}
+
+**Mock boundaries:**
+- **{target name}** — `{patch path or setup method}`
+  - Default: `{response shape}` _(scenarios {N, M})_
+  - {variant label}: `{response shape}` _(scenario {X})_
+- **{target name}** — `{patch path or setup method}`
+  - Default: `{response shape}` _(scenarios {N, M})_
 
 #### Step 1.1 — {what this step does}
 
@@ -439,6 +473,28 @@ File: `{source-file-path}`
 - **Changes** is mandatory for `tests required` and `tests only`
   slices. It provides `sda-dev` with everything it needs to write
   tests and stubs without exploring the codebase.
+- **Test Context** is mandatory for `tests required` and `tests only`
+  slices. Use `#### Test Context` as a heading (same level as
+  `#### Step N.M`) with three bold subsections:
+  - **Patterns:** one bullet per mock/fixture pattern. Each bullet:
+    pattern description, when to use, and scenario numbers in
+    parentheses. If no test file exists yet, patterns from the
+    closest related test file in the same package.
+  - **Object construction:** two parts:
+    - *Baseline* — a fenced code block with one assignment per line
+      showing the shared setup most scenarios need (constructor
+      calls, factory invocations, field overrides).
+    - *Variations* — one bullet per scenario that differs from
+      baseline. State what changes and why (e.g., extra object,
+      different field value).
+  - **Mock boundaries:** one bullet group per mock target:
+    - Header line: **target name** + patch path or setup method.
+    - Sub-bullets: one per response variant. Each states the
+      response shape and which scenarios use it. Label the most
+      common variant "Default".
+  Populate during Drafting by reading the test file and relevant
+  source file. Without Test Context, `sda-dev` is forced to explore
+  the codebase to discover these details — defeating zero-exploration.
 - **Steps** group related changes and the scenarios that verify them.
   Each step is a `#### Step N.M — {description}` subheading within
   a slice. A step contains `Scenarios:` followed by `Changes:`.
@@ -466,6 +522,11 @@ File: `{source-file-path}`
     describes one change: what to replace/add and where. Anchor with
     a recognizable line from the existing code (first line of the
     target block). Provide the new code in a fenced block.
+    When the modification involves conditional logic, state
+    transitions, or coordination across methods, include an
+    `Algorithm:` section with the full decision flow. A bare
+    "add this call after line X" is sufficient only for single-line,
+    unconditional insertions.
   - **Imports:** list non-obvious imports (third-party, cross-module)
     as a separate symbol entry or inline with the symbol that needs
     them. Omit standard-library and same-module imports.
@@ -474,7 +535,7 @@ File: `{source-file-path}`
   `See Design Approach > {Slice name} for {detail}.`
 - **Scenarios** are numbered bold paragraphs (`**1. {name}**`) under
   each step's `Scenarios:` label, before the `Changes:` block.
-- **Test scenarios** use Given/When/Then format (flat bullet labels,
+- **Test scenarios** use `Given`/`When`/`Then` format (flat bullet labels,
   not indented). Cover happy path, errors, edge cases.
 - **Integration items**: `{file-path}` with sub-bullets for changes.
 - **Code snippets**: every code block must have the symbol header

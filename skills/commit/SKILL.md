@@ -24,12 +24,8 @@ approval. Execute VCS write operations only after explicit approval.
 
 ## §1. Detect VCS Commands
 
-Read `./.dev-assistant/project-tools.md` → `### Version Control` section.
-
-- **Section found** → use those commands.
-- **Section missing** → detect VCS: check for `.git/`, `.hg/`, `.svn/`
-  at the repo root (first match wins). If none found, tell the user
-  and stop.
+Detect VCS: check for `.git/`, `.hg/`, `.svn/` at the repo root
+(first match wins). If none found, tell the user and stop.
 
 ### Shell detection
 
@@ -50,9 +46,10 @@ On non-Windows (Linux/macOS), default to `&&`.
 
 | Action | git | hg | svn |
 |---|---|---|---|
+| Branch | `git branch --show-current` | `hg branch` | — |
 | Status | `git status --short` | `hg status` | `svn status` |
-| Diff summary | `git diff --stat` | `hg diff --stat` | `svn diff --summarize` |
-| Diff full | `git diff` | `hg diff` | `svn diff` |
+| Diff summary | `git diff HEAD --stat` | `hg diff --stat` | `svn diff --summarize` |
+| Diff full | `git diff HEAD` | `hg diff` | `svn diff` |
 | Stage all | `git add -A` | *(auto)* | *(auto)* |
 | Stage files | `git add <files>` | `hg add <new>` | `svn add <new>` |
 | Commit | `git commit -m "<msg>"` | `hg commit -m "<msg>"` | `svn commit -m "<msg>"` |
@@ -61,13 +58,16 @@ On non-Windows (Linux/macOS), default to `&&`.
 
 ## §2. Propose
 
-### Step 1 — Status
+### Step 1 — Status & branch context
 
-Run status command. No changes → report "Nothing to commit" and stop.
+1. Run branch command → note the current branch name.
+2. Run status command. No changes → report "Nothing to commit" and stop.
+3. Report branch name alongside the file list.
 
 ### Step 2 — Diff analysis
 
-Run diff summary, then full diff. Determine:
+Run diff summary, then full diff (`HEAD` base captures both staged
+and unstaged changes). Determine:
 - Which modules/areas are affected
 - Logical change type (feature, fix, refactor, etc.)
 - Whether changes span unrelated concerns
@@ -115,8 +115,11 @@ Parts in `[]` are optional.
 - **body**: max 3 lines. Explain _why_, not _what_. Omit if summary is
   self-explanatory. Must not repeat summary.
 - **forbidden**: "This commit…", "Updated…", "Changed…" openers; test
-  coverage percentages; quality gate mentions; task names or
-  `.dev-assistant` paths.
+  coverage percentages; quality gate mentions.
+- **no special characters in message text**: do not use quotes
+  (`"`, `'`, backticks), apostrophes, or other shell-sensitive
+  characters. Rephrase or use hyphens instead
+  (e.g. "add document-the-symbol-itself rule").
 - **footers**: only `BREAKING CHANGE: <description>` and
   `Refs: <SHA>` (for `revert` type only).
 
@@ -162,33 +165,25 @@ Refs: a3b8f2c
 Present:
 1. Files to be committed (from status output)
 2. Proposed commit message (fenced code block)
-3. A single copy-pasteable terminal command that stages and commits,
-   using the detected shell's separator:
 
-   bash / cmd / PowerShell 7+:
-   ```
-   git add -A && git commit -m "<message>"
-   ```
+Then use the ask-questions tool with these options:
+- **Commit** — stage and commit only
+- **Commit & Push** — stage, commit, and push
+- **Edit** — let the user revise the message before proceeding
 
-   PowerShell 5.1:
-   ```
-   git add -A; git commit -m "<message>"
-   ```
-
-   For multi-line messages use the multi-arg form:
-   ```
-   git add -A && git commit -m "<summary>" -m "<body>"
-   ```
-
-Adapt the command to the detected VCS (hg/svn). The user can edit the
-message text before pasting.
-
-**Stop and wait for user approval. Do not execute VCS write commands.**
+**Do not execute VCS write commands until the user picks an option.**
 
 ## §3. Execute
 
-Only after explicit user approval.
+Only after user selects an option from the approval gate.
 
-1. Run the approved command (exactly as approved, including user edits).
-2. If user requested push — run push command after commit succeeds.
+- **Edit** → ask for the revised message, then re-present the approval
+  gate with the updated message.
+- **Commit** or **Commit & Push** → proceed:
+
+1. Run stage + commit (e.g. `git add -A && git commit -m "<summary>" -m "<body>"`).
+   For multi-line messages use the multi-arg `-m` form.
+   Use the detected shell's separator from §1.
+   If it fails, diagnose and retry once.
+2. If user chose **Commit & Push** — run push command after commit succeeds.
 3. Show the VCS log entry for the new commit.
