@@ -11,7 +11,7 @@
 #>
 
 param(
-    [Parameter(Mandatory)] [string] $TargetBase,
+    [string] $TargetBase = "$env:USERPROFILE\.copilot",
     [Parameter(Mandatory)] [string] $Name
 )
 
