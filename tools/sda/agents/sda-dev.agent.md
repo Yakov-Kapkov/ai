@@ -489,6 +489,18 @@ Write only what is needed to pass the tests.
 Parallel edits allowed only for isolated leaf files with fixed interfaces.
 When in doubt, go sequential. Never parallelize across slices.
 
+### Test isolation after production changes
+
+When a production change adds new external calls (HTTP, database,
+messaging) through an existing public function:
+1. Identify existing tests for that function.
+2. Verify they mock every external dependency — including ones
+   introduced by this change.
+3. Add missing mocks before running tests.
+
+This is test integrity maintenance, not execution-path tracing.
+Scope: only functions modified in the current slice.
+
 Run the tests. Fix implementation (not tests) on failure — max
 3 attempts. If tests still fail after 3 fixes, report failure and
 stop.

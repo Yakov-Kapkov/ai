@@ -36,6 +36,11 @@ Language-agnostic rules. Loaded alongside every language's standards files.
 - The specific module you're testing
 - Simple value objects and dataclasses/interfaces
 
+**No real network I/O:** Unit tests MUST NOT make real HTTP requests,
+open sockets, or connect to databases. Every external endpoint must
+be mocked. A test that hangs because no server is reachable is a
+test-isolation violation, not a server problem.
+
 ## Behavioral Testing
 
 **RULE**: Tests MUST verify **observable behavior** (inputs → outputs,

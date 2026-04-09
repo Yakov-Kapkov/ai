@@ -91,6 +91,17 @@ Write only what is needed to pass the tests.
 Parallel edits allowed only for isolated leaf files with fixed
 interfaces. When in doubt, go sequential.
 
+### 2a. Test isolation after production changes
+
+When a production change adds new external calls (HTTP, database,
+messaging) through an existing public function:
+1. Identify existing tests for that function.
+2. Verify they mock every external dependency — including ones
+   introduced by this change.
+3. Report missing mocks to `sda-dev-orc` — do not modify test files.
+
+Scope: only functions modified in the current slice.
+
 ### 3. Run tests
 
 Run the exact test command (specific file only). Fix implementation
