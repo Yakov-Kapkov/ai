@@ -62,19 +62,19 @@ sda-dev-orc ─delegates─▸ sda-coder             orchestrated branch
 
 | When you change… | Also update… | Why |
 |---|---|---|
-| `sda-dev` workflow logic (§1–§7) | `sda-dev-orc` (and vice versa) | Both branches must implement the same TDD workflow |
+| `sda-dev` workflow logic (Phase 0–5) | `sda-dev-orc` (and vice versa) | Both branches must implement the same TDD workflow |
 | `sda-dev` RED/test-writing rules | `sda-test-writer` (and vice versa) | `sda-test-writer` is the extracted RED phase of `sda-dev` |
 | `sda-dev` GREEN/implementation rules | `sda-coder` (and vice versa) | `sda-coder` is the extracted GREEN phase of `sda-dev` |
 | `sda-dev-orc` delegation format | `sda-test-writer` and `sda-coder` input contracts | Subagents parse the exact format the orchestrator sends |
 | Approval gate structure or output templates | All of: `sda-dev`, `sda-dev-orc`, `sda-test-writer`, `sda-coder` | Gate outputs must be consistent across branches |
-| `bootstrap.md` | `sda-dev` and `sda-dev-orc` (bootstrap §1 references) | Both read bootstrap at conversation start |
+| `bootstrap.md` | `sda-dev` and `sda-dev-orc` (Phase 0 bootstrap step) | Both read bootstrap at conversation start |
 | `task.md` schema (in `sda-task`) | `sda-dev`, `sda-dev-orc`, `sda-test-writer`, `sda-coder` | All implementation agents consume `task.md` |
 | `state.md` schema (in `sda-task`) | `sda-dev`, `sda-dev-orc` | Both track progress via `state.md` |
 | `feature.md` schema (in `sda-feature`) | `sda-task` (reads feature context) | Task designer reads the feature spec |
 | `design.md` schema (in `sda-system`) | `sda-feature` (references system design) | Feature designer references system architecture |
 | Communication rules (silent-by-default, forbidden phrases) | `sda-dev`, `sda-dev-orc` | Both share identical communication constraints |
 | Standards compliance rules | `sda-dev`, `sda-dev-orc`, `sda-test-writer`, `sda-coder` | All code-producing agents enforce standards |
-| Quality check gates (§6) | `sda-dev`, `sda-dev-orc` | Both run the same quality gates |
+| Quality check gates (Phase 4) | `sda-dev`, `sda-dev-orc` | Both run the same quality gates |
 | `sda-init` output format (`project-tools.md`, `project-config.json`) | `bootstrap.md`, `sda-dev`, `sda-dev-orc` | Implementation agents depend on init outputs |
 | `README.md` | Keep consistent with all agent descriptions and workflow phases | User-facing docs must match agent behavior |
 
