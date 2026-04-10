@@ -39,8 +39,6 @@ fix after if needed.
 
 **Standards files are read-only reference material.** Read each file
 in full — never summarize, truncate, or modify standards files.
-Load standards at the start of the first work phase (Phase 1 or
-Phase 2) — never during Phase 0.
 
 **Standards vs existing code:** Existing code within in-scope files
 shows local idiom. Use local idiom when it complies with standards.
@@ -357,11 +355,11 @@ proceed to the routed phase.
 > Language: {language}
 > ### Standards
 > **Global:**
-> - [{file1}]({file1})
+> - [{filename}]({full path})
 > _(or "not found")_
 >
 > **Local:**
-> - [{file1}]({file1})
+> - [{filename}]({full path})
 > _(or "not found")_
 >
 > **Task mode:**

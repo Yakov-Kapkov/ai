@@ -265,11 +265,11 @@ proceed to the routed phase.
 > Language: {language}
 > ### Standards
 > **Global:**
-> - [{file1}]({file1})
+> - [{filename}]({full path})
 > _(or "not found")_
 >
 > **Local:**
-> - [{file1}]({file1})
+> - [{filename}]({full path})
 > _(or "not found")_
 >
 > **Task mode:**
