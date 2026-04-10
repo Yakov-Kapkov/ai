@@ -333,7 +333,7 @@ Skip state tracking (no `state.md` updates).
 > Language: {language}
 > Approval gates: {true/false}
 > Standards:
-> - [{filename}]({full path})
+> - {full path to standards file}
 > _(or "not found")_
 >
 > **Ad-hoc mode only:**
