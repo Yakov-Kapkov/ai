@@ -13,6 +13,7 @@ Language-agnostic rules. Loaded alongside every language's standards files.
 - [Clean Code Practices](#clean-code-practices)
 - [Comments: Explain Why Not What](#comments-explain-why-not-what)
 - [Anti-Patterns](#anti-patterns)
+- [Unexpected Command Results](#unexpected-command-results)
 
 ## SOLID Design Principles
 
@@ -113,3 +114,9 @@ obvious code, standard violations (fix the code).
 - **Tight Coupling**: Classes knowing too much about internals
 - **Untested Code**: Missing unit tests
 - **Orphaned Constants**: Never used (delete), used once (make local), or partially used (complete refactoring)
+
+## Unexpected Command Results
+
+**RULE**: When a command (test run, build, lint, type check) produces
+an unexpected result, troubleshoot using available tools and skills
+first, then by yourself.

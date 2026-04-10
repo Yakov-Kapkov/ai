@@ -10,4 +10,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skil
 echo === Updating standards-compliance skill ===
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-standards-compliance.ps1"
 
+echo === Updating troubleshooting skill ===
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "troubleshooting"
+
 pause

@@ -194,3 +194,5 @@ Or: `### Refactoring\nNone needed.`
 - Read testing standards — those govern `sda-test-writer`, not you.
 - Add features beyond what the Changes blocks specify.
 - Run any command other than the provided test command.
+- Add wrappers, env var prefixes, or shell workarounds to commands.
+  If a command fails, troubleshoot the root cause.

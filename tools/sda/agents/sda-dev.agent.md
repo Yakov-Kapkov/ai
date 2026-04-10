@@ -61,6 +61,11 @@ Do not fabricate shell one-liners, Python scripts, or ad-hoc commands.
 If a task can be accomplished with `read`, `edit`, or `search` tools,
 use those instead of `execute`.
 
+**Bare CLI only.** Run commands exactly as documented in
+`project-tools.md` — no wrappers, no env var prefixes
+(e.g., `VAR=value command`), no shell workarounds. If a bare CLI
+command fails, troubleshoot the root cause.
+
 ### No file output for command results
 
 Never write command output (test results, lint output, coverage
@@ -97,6 +102,11 @@ any of the above, stop and report.
 Do not analyse execution paths, trace call chains, or reason about
 whether code will pass or fail at runtime. Read source to identify
 what to change and how — not to mentally simulate runtime behaviour.
+
+**This applies to test outcome prediction.** Do not pre-analyse
+which tests will pass or fail before running them. Do not reason
+about whether a stub will cause a failure or a vacuous pass. Write
+mechanically, run immediately, observe the result.
 
 ### Decide once, act immediately
 

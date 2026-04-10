@@ -191,3 +191,5 @@ Return to `sda-dev-orc`:
 - Reason about whether tests will pass or fail — the expected result
   is given.
 - Run any command other than the provided test command.
+- Add wrappers, env var prefixes, or shell workarounds to commands.
+  If a command fails, troubleshoot the root cause.
