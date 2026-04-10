@@ -106,6 +106,12 @@ edge cases, business logic context.
 **Do not comment**: Magic numbers (use constants), bad code (refactor),
 obvious code, standard violations (fix the code).
 
+**Domain language only.** Comments, section separators, and docstrings
+must use domain terminology — not references to development tooling,
+task-management internals, or workflow-specific identifiers (e.g.,
+"Slice 1", "Task 3", "Phase RED"). Describe *what the code does* in
+business terms.
+
 ## Anti-Patterns
 
 - **Magic Numbers/Strings**: Use named constants — see language `coding-standards.md`
@@ -118,5 +124,11 @@ obvious code, standard violations (fix the code).
 ## Unexpected Command Results
 
 **RULE**: When a command (test run, build, lint, type check) produces
-an unexpected result, troubleshoot using available tools and skills
-first, then by yourself.
+an unexpected result, diagnose before acting:
+
+1. Re-read applicable standards (testing, coding, style) — look for
+   a rule that covers the symptom.
+2. Check available skills for diagnostic/troubleshooting guidance.
+3. Fix the root cause in code (fixtures, imports, mocks, type
+   annotations). Never work around with shell commands, environment
+   manipulation, or ad-hoc scripts.

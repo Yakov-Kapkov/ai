@@ -1,8 +1,18 @@
 # Troubleshooting Dictionary
 
-Symptom → cause → fix. Language-agnostic — entries apply regardless
-of programming language. Examples may reference specific languages
-for clarity, but the pattern applies universally.
+Symptom → cause → fix. Language-agnostic.
+
+## Index
+
+Read **only this table first**. Match the symptom keyword, then read only the listed lines.
+
+| Section | Keywords | Lines |
+|---|---|---|
+| Test Failures | env var, import not found, test hangs, false green, RED expected | 19–27 |
+| Build / Compile Errors | type error, cannot find name, unresolved reference | 29–34 |
+| Lint / Style Errors | import order, unused import, magic number | 36–42 |
+| Command Execution | env var not set, KeyError, empty config, dotenv | 44–48 |
+| Quality Gate Failures | coverage below threshold, coverage no output | 50–55 |
 
 ---
 

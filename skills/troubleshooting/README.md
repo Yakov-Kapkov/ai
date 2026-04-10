@@ -1,6 +1,6 @@
 # Troubleshooting — Skill
 
-A Copilot skill that provides a pre-built diagnostic dictionary for unexpected command results — test failures, build errors, lint violations, and runtime exceptions.
+A Copilot skill that provides a troubleshooting dictionary for unexpected command results — test failures, build errors, lint violations, and runtime exceptions.
 
 ---
 

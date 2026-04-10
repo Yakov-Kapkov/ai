@@ -41,7 +41,7 @@ Reusable skills that extend agent capabilities.
 | [`commit`](skills/commit/) | Analyzes working directory changes, composes conventional commit messages, and executes VCS operations after user approval |
 | [`repo-onboarding`](skills/repo-onboarding/README.md) | Generates four onboarding docs for a repo: tooling commands, architecture, summary, and quickstart |
 | [`standards-compliance`](skills/standards-compliance/README.md) | Enforces project coding standards on all produced code changes — resolves conflicts between task specs and standards |
-| [`troubleshooting`](skills/troubleshooting/) | Pre-built diagnostic dictionary for unexpected command results — test failures, build errors, lint violations, runtime exceptions |
+| [`troubleshooting`](skills/troubleshooting/) | Troubleshooting dictionary for unexpected command results — test failures, build errors, lint violations, runtime exceptions |
 
 ---
 

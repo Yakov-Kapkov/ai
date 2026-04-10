@@ -84,6 +84,15 @@ time, stop. Use Test Context's approach and execute.
 Read all files in parallel, 500 lines at a time. Continue any file
 that returned exactly 500 lines.
 
+**Rules:**
+- First read is always lines 1–500.
+- Exactly 500 lines returned → file has more. Fewer → file is done.
+- Never use ranges smaller than 500 lines.
+- Never read files one at a time when they could be batched.
+- **Appending:** The last batch tells you the end line. Never probe
+  for the end with single-line reads.
+- Never retry the same range or use single-line reads.
+
 ---
 
 ## Workflow
@@ -91,7 +100,6 @@ that returned exactly 500 lines.
 ### 1. Read files
 
 Read the **Source** and **Test** files from the slice specification.
-Read testing standards if not already in context.
 
 ### 2. Pre-check — stubs
 
@@ -118,8 +126,8 @@ For each scenario in order:
 
 ### 4. Standards check
 
-After all scenarios are written, verify the test file against
-testing standards. Fix violations.
+Load testing standards if not already in context. Then verify the
+test file against them. Fix violations.
 
 ### 5. Completeness check
 

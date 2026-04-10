@@ -39,8 +39,8 @@ fix after if needed.
 
 **Standards files are read-only reference material.** Read each file
 in full — never summarize, truncate, or modify standards files.
-The project's standards files must be loaded before the first
-verification in a conversation.
+Load standards at the start of the first work phase (Phase 1 or
+Phase 2) — never during Phase 0.
 
 **Standards vs existing code:** Existing code within in-scope files
 shows local idiom. Use local idiom when it complies with standards.
@@ -196,10 +196,15 @@ continue any file that returned exactly 500 lines.
 - **A file is not fully read until a batch returns fewer than 500 lines
   for it.** Do not move to the next step with unfinished files.
 
-**Recovery — overshot past end of file:** If `read_file` returns empty,
-the file ended before your start line. Use `grep_search` with
-`includePattern` on the file to locate content, or re-read with a lower
-range. Never run ad-hoc terminal commands to inspect files.
+**Appending to a file:** When the file was already read in 500-line
+batches, the last batch tells you the end line (start + lines
+returned − 1). Use that to position an append. Never probe for the
+end with single-line reads.
+
+**Recovery — overshot past end of file:** If `read_file` returns
+empty, re-read the last known good range with a 500-line window.
+Never retry the same range and never use single-line reads to
+locate the end.
 
 ---
 
@@ -257,6 +262,10 @@ messages, Result templates, and approval gates.
 This phase reads configuration, detects the mode, and prepares
 inputs for the work phases. No source or test files are read.
 
+**No text output until the Phase 0 Result.** All steps below are
+silent — read files, detect mode, extract inputs. The only user-
+visible output from this phase is the Title and the Result block.
+
 ### Control flow
 
 1. **Read bootstrap file** —
@@ -265,7 +274,10 @@ inputs for the work phases. No source or test files are read.
    `project-tools.md`), print its message exactly and end the
    response. Do not reason, search, or initialize anything yourself.
 
-2. **Detect mode.** Two modes, determined by the user's intent:
+2. **Read standards** — load all existing coding standards
+   so rules are available before writing any code.
+
+3. **Detect mode.** Two modes, determined by the user's intent:
    - **Task mode** — `task.md` is the specification. Applies when
      the user wants to execute the slice loop (e.g., "implement
      this task", "continue", "next slice"). Merely referencing a
@@ -274,14 +286,14 @@ inputs for the work phases. No source or test files are read.
    - **Ad-hoc mode** — the user's words are the specification.
      Everything else. Default mode.
 
-3. **Execute mode-specific setup** — step 3a (task) or 3b (ad-hoc).
+4. **Execute mode-specific setup** — step 4a (task) or 4b (ad-hoc).
 
-#### Step 3a — Task mode setup
+#### Step 4a — Task mode setup
 
 **STATE ANCHOR — re-read this every time you enter Phase 0 task
 setup:** You are preparing slice inputs from `task.md` alone.
 `task.md` is self-contained. Do NOT read source or test files. Do
-NOT search the codebase. Extract all slice inputs (scenarios, file
+NOT search the codebase at this moment. Extract all slice inputs (scenarios, file
 paths, Changes, Test Context) directly from `task.md`. The **Zero
 exploration in task mode** constraint applies in full.
 
@@ -307,12 +319,9 @@ exploration in task mode** constraint applies in full.
    | `tests only` | Phase 1 (RED, expected GREEN) |
    | `integration only` | Phase 2 (GREEN, integration) |
 
-> Result:
-> ### Slice {N}: {name} — {type}
+Proceed to the Phase 0 Result.
 
-Then proceed to the routed phase.
-
-#### Step 3b — Ad-hoc mode setup
+#### Step 4b — Ad-hoc mode setup
 
 Skip state tracking (no `state.md` updates).
 
@@ -337,7 +346,28 @@ Skip state tracking (no `state.md` updates).
      `integration only`.
 3. **Determine route** — same table as task mode step 5.
 
-> Result: _(silent — proceed to routed phase)_
+Proceed to the Phase 0 Result.
+
+### Phase 0 Result
+
+After mode-specific setup completes, print this output then
+proceed to the routed phase.
+
+> Result:
+> Language: {language}
+> ### Standards
+> **Global:**
+> - [{file1}]({file1})
+> _(or "not found")_
+>
+> **Local:**
+> - [{file1}]({file1})
+> _(or "not found")_
+>
+> **Task mode:**
+> ## Slice {N}: {name} — {type}
+> **Ad-hoc mode:**
+> ## {name} — {type}
 
 ---
 

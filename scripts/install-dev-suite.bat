@@ -1,16 +1,24 @@
 @echo off
+setlocal
+
 set SCRIPT_DIR=.\
 
-echo === Updating SDA tool ===
+echo.
+powershell -NoProfile -Command "Write-Host '=== Updating SDA tool ===' -ForegroundColor Cyan"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-tool.ps1" -Name "sda"
 
-echo === Updating commit skill ===
+echo.
+powershell -NoProfile -Command "Write-Host '== Updating commit skill ==' -ForegroundColor Yellow"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "commit"
 
-echo === Updating standards-compliance skill ===
+echo.
+powershell -NoProfile -Command "Write-Host '== Updating standards-compliance skill ==' -ForegroundColor Yellow"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-standards-compliance.ps1"
 
-echo === Updating troubleshooting skill ===
+echo.
+powershell -NoProfile -Command "Write-Host '== Updating troubleshooting skill ==' -ForegroundColor Yellow"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "troubleshooting"
 
+echo.
+endlocal
 pause

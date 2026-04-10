@@ -112,6 +112,13 @@ calls, and end your response.** Wait for explicit user approval.
 Read all files in parallel, 500 lines at a time. After each batch,
 continue any file that returned exactly 500 lines.
 
+**Rules:**
+- First read is always lines 1–500.
+- Exactly 500 lines returned → file has more. Fewer → file is done.
+- Never use ranges smaller than 500 lines.
+- Never read files one at a time when they could be batched.
+- Never retry the same range or use single-line reads.
+
 ---
 
 ## Communication style — mandatory
@@ -167,6 +174,10 @@ This phase reads configuration, detects the mode, and prepares
 inputs for the work phases. No source or test files are read. No
 subagent delegation occurs.
 
+**No text output until the Phase 0 Result.** All steps below are
+silent — read files, detect mode, extract inputs. The only user-
+visible output from this phase is the Title and the Result block.
+
 ### Control flow
 
 1. **Read bootstrap file** —
@@ -175,7 +186,10 @@ subagent delegation occurs.
    `project-tools.md`), print its message exactly and end the
    response.
 
-2. **Detect mode.** Two modes, determined by the user's intent:
+2. **Read standards** — load all existing coding standards
+   so rules are available before writing any code.
+
+3. **Detect mode.** Two modes, determined by the user's intent:
    - **Task mode** — `task.md` is the specification. Applies when
      the user wants to execute the slice loop (e.g., "implement
      this task", "continue", "next slice"). Merely referencing a
@@ -184,14 +198,14 @@ subagent delegation occurs.
    - **Ad-hoc mode** — the user's words are the specification.
      Everything else. Default mode.
 
-3. **Execute mode-specific setup** — step 3a (task) or 3b (ad-hoc).
+4. **Execute mode-specific setup** — step 4a (task) or 4b (ad-hoc).
 
-#### Step 3a — Task mode setup
+#### Step 4a — Task mode setup
 
 **STATE ANCHOR — re-read this every time you enter Phase 0 task
 setup:** You are preparing slice inputs from `task.md` alone.
 `task.md` is self-contained. Do NOT read source or test files. Do
-NOT delegate exploration to a subagent. Do NOT search the codebase.
+NOT delegate exploration to a subagent at this moment. Do NOT search the codebase.
 Extract all slice inputs (scenarios, file paths, Changes, Test
 Context) directly from `task.md`.
 
@@ -215,12 +229,9 @@ Context) directly from `task.md`.
    | `tests only` | Phase 1 (RED, expected GREEN) |
    | `integration only` | Phase 2 (GREEN, integration) |
 
-> Result:
-> ### Slice {N}: {name} — {type}
+Proceed to the Phase 0 Result.
 
-Then proceed to the routed phase.
-
-#### Step 3b — Ad-hoc mode setup
+#### Step 4b — Ad-hoc mode setup
 
 Skip state tracking (no `state.md` updates).
 
@@ -243,7 +254,28 @@ Skip state tracking (no `state.md` updates).
      `integration only`.
 3. **Determine route** — same table as task mode step 5.
 
-> Result: _(silent — proceed to routed phase)_
+Proceed to the Phase 0 Result.
+
+### Phase 0 Result
+
+After mode-specific setup completes, print this output then
+proceed to the routed phase.
+
+> Result:
+> Language: {language}
+> ### Standards
+> **Global:**
+> - [{file1}]({file1})
+> _(or "not found")_
+>
+> **Local:**
+> - [{file1}]({file1})
+> _(or "not found")_
+>
+> **Task mode:**
+> ## Slice {N}: {name} — {type}
+> **Ad-hoc mode:**
+> ## {name} — {type}
 
 ---
 
