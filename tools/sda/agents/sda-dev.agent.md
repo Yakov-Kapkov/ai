@@ -285,6 +285,7 @@ messages, Result templates, and approval gates.
 > Result:
 > **Language**: {language}
 > **Approval gates**: {true/false}
+> **Mode**: {task/ad-hoc}
 > **Development guidance**:
 > - {full path to standards file}
 > _(or "not found")_
