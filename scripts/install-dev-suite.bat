@@ -8,8 +8,8 @@ powershell -NoProfile -Command "Write-Host '=== Updating SDA tool ===' -Foregrou
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-tool.ps1" -Name "sda"
 
 echo.
-powershell -NoProfile -Command "Write-Host '=== Updating commit agent ===' -ForegroundColor Cyan"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-agent.ps1" -Name "commit"
+powershell -NoProfile -Command "Write-Host '== Updating commit skill ==' -ForegroundColor Yellow"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "commit"
 
 echo.
 powershell -NoProfile -Command "Write-Host '== Updating standards-compliance skill ==' -ForegroundColor Yellow"
