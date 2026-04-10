@@ -140,11 +140,12 @@ messages, Result templates, and approval gates.
 | Phase | Label |
 |---|---|
 | 0 | BOOTSTRAP |
-| 1 | RED |
-| 2 | GREEN |
-| 3 | REFACTOR |
-| 4 | QUALITY |
-| 5 | COMPLETE |
+| 1 | PLAN |
+| 2 | RED |
+| 3 | GREEN |
+| 4 | REFACTOR |
+| 5 | QUALITY |
+| 6 | COMPLETE |
 
 ### Rules
 
@@ -163,6 +164,9 @@ messages, Result templates, and approval gates.
   `PHASE N — LABEL:` prefix. Subsequent messages within the same
   phase must NOT repeat it.
 - Bullet points over paragraphs. `KEY: value` pairs over prose.
+- Output findings as `KEY: value` pairs — no sentences wrapping
+  a value. If the value is a list, use a bullet list under the key.
+- State what is happening, not what you are about to do.
 - Show only what changed — not everything you touched.
 
 ### Forbidden
@@ -172,20 +176,22 @@ messages, Result templates, and approval gates.
 - Restating the task, slice description, or user request.
 - Announcing file reads, searches, or edit operations.
 - Summarising what you are *about to* do.
+- Stating what you are about to do instead of what is happening.
 
 ---
 
-## PHASE 0 — Bootstrap + Setup
+## PHASE 0 — Bootstrap
 
 > Title: **PHASE 0** — BOOTSTRAP: Initialising
 
-This phase reads configuration, detects the mode, and prepares
-inputs for the work phases. No source or test files are read. No
-subagent delegation occurs.
+This phase reads configuration, loads standards, and detects the
+operating mode. No source or test files are read. No subagent
+delegation occurs.
 
-**No text output until the Phase 0 Result.** All steps below are
-silent — read files, detect mode, extract inputs. The only user-
-visible output from this phase is the Title and the Result block.
+**No text output until the Phase 0 Result.** Every step below is
+tool calls only — no prose, no narration, no commentary between
+tool calls. The only user-visible text from this phase is the Title
+(above) and the Result block (below).
 
 ### Control flow
 
@@ -207,40 +213,12 @@ visible output from this phase is the Title and the Result block.
    - **Ad-hoc mode** — the user's words are the specification.
      Everything else. Default mode.
 
-4. **Execute mode-specific setup** — step 4a (task) or 4b (ad-hoc).
+4. **Route by mode:**
+   - Task mode → proceed to Phase 1 (PLAN).
+   - Ad-hoc mode → execute ad-hoc setup (below), then proceed to
+     Phase 2 (RED).
 
-#### Step 4a — Task mode setup
-
-**STATE ANCHOR — re-read this every time you enter Phase 0 task
-setup:** You are preparing slice inputs from `task.md` alone.
-`task.md` is self-contained. Do NOT read source or test files. Do
-NOT delegate exploration to a subagent at this moment. Do NOT search the codebase.
-Extract all slice inputs (scenarios, file paths, Changes, Test
-Context) directly from `task.md`.
-
-1. **Read bootstrap §3 (Locate the task)** to find the task folder.
-2. **Read `state.md`.** Note the task-level `Status` field. Find
-   the first non-DONE slice:
-   - `PENDING` → continue to step 3.
-   - `RED` → resuming — skip Phase 1, go directly to Phase 2.
-   - `GREEN` → resuming — present for approval, then mark DONE.
-   - All `DONE` → warn user, ask whether to proceed.
-3. **Read `task.md`** — identify the current slice and its type
-   (`tests required`, `tests only`, or `integration only`).
-   Ignore the **Source References** section.
-4. **Extract slice inputs** from `task.md`: scenarios, source/test
-   file paths, Changes blocks, Test Context.
-5. **Determine route:**
-
-   | Slice type | Route |
-   |---|---|
-   | `tests required` | Phase 1 (RED) → Phase 2 (GREEN) |
-   | `tests only` | Phase 1 (RED, expected GREEN) |
-   | `integration only` | Phase 2 (GREEN, integration) |
-
-Proceed to the Phase 0 Result.
-
-#### Step 4b — Ad-hoc mode setup
+#### Ad-hoc setup (Phase 0 only)
 
 Skip state tracking (no `state.md` updates).
 
@@ -261,39 +239,78 @@ Skip state tracking (no `state.md` updates).
    - **Source / Test files** — paths for production and test code.
    - **Work type** — `tests required` (default), `tests only`, or
      `integration only`.
-3. **Determine route** — same table as task mode step 5.
+3. **Determine route:**
 
-Proceed to the Phase 0 Result.
+   | Slice type | Route |
+   |---|---|
+   | `tests required` | Phase 2 (RED) → Phase 3 (GREEN) |
+   | `tests only` | Phase 2 (RED, expected GREEN) |
+   | `integration only` | Phase 3 (GREEN, integration) |
 
 ### Phase 0 Result
-
-After mode-specific setup completes, print this output then
-proceed to the routed phase.
 
 > Result:
 > Language: {language}
 > Approval gates: {true/false}
-> ### Standards
-> **Global:**
+> Standards:
 > - [{filename}]({full path})
 > _(or "not found")_
 >
-> **Local:**
-> - [{filename}]({full path})
-> _(or "not found")_
->
-> **Task mode:**
-> ## Slice {N}: {name} — {type}
-> **Ad-hoc mode:**
+> **Ad-hoc mode only:**
 > ## {name} — {type}
+
+Proceed to the routed phase.
 
 ---
 
-## PHASE 1 — RED: Delegate test writing
+## PHASE 1 — Plan (task mode only)
 
-> Title: **PHASE 1** — RED: Delegating test writing
+> Title: **PHASE 1** — PLAN: Preparing slice
+
+This phase runs once per slice. It reads the task, identifies the
+current slice, extracts inputs, and determines the route.
 
 **STATE ANCHOR — re-read this every time you enter Phase 1:** You
+are preparing slice inputs from `task.md` alone. `task.md` is
+self-contained. Do NOT read source or test files. Do NOT delegate
+exploration to a subagent at this moment. Do NOT search the
+codebase. Extract all slice inputs (scenarios, file paths, Changes,
+Test Context) directly from `task.md`.
+
+### Control flow
+
+1. **Read bootstrap §3 (Locate the task)** to find the task folder.
+2. **Read `state.md`.** Note the task-level `Status` field. Find
+   the first non-DONE slice:
+   - `PENDING` → continue to step 3.
+   - `RED` → resuming — skip Phase 2, go directly to Phase 3.
+   - `GREEN` → resuming — present for approval, then mark DONE.
+   - All `DONE` → warn user, ask whether to proceed.
+3. **Read `task.md`** — identify the current slice and its type
+   (`tests required`, `tests only`, or `integration only`).
+   Ignore the **Source References** section.
+4. **Extract slice inputs** from `task.md`: scenarios, source/test
+   file paths, Changes blocks, Test Context.
+5. **Determine route:**
+
+   | Slice type | Route |
+   |---|---|
+   | `tests required` | Phase 2 (RED) → Phase 3 (GREEN) |
+   | `tests only` | Phase 2 (RED, expected GREEN) |
+   | `integration only` | Phase 3 (GREEN, integration) |
+
+### Phase 1 Result
+
+> Result:
+> ## Slice {N}: {name} — {type}
+
+---
+
+## PHASE 2 — RED: Delegate test writing
+
+> Title: **PHASE 2** — RED: Delegating test writing
+
+**STATE ANCHOR — re-read this every time you enter Phase 2:** You
 are delegating test writing to `sda-test-writer`. Your only job is
 to pass inputs and present the subagent's output. Do NOT read source
 or test files yourself. Do NOT write tests yourself. Delegate and
@@ -359,17 +376,17 @@ Task mode: update `state.md` →
 
 **Stop. Wait for approval.**
 
-- TDD slice: after approval → proceed to Phase 2.
-- Tests-only slice: after approval → return to Phase 0 step 3a
-  for the next slice. If no more slices → proceed to Phase 3.
+- TDD slice: after approval → proceed to Phase 3.
+- Tests-only slice: after approval → return to Phase 1
+  for the next slice. If no more slices → proceed to Phase 4.
 
 ---
 
-## PHASE 2 — GREEN: Delegate implementation
+## PHASE 3 — GREEN: Delegate implementation
 
-> Title: **PHASE 2** — GREEN: Delegating implementation
+> Title: **PHASE 3** — GREEN: Delegating implementation
 
-**STATE ANCHOR — re-read this every time you enter Phase 2:** You
+**STATE ANCHOR — re-read this every time you enter Phase 3:** You
 are delegating implementation to `sda-coder`. Your only job is to
 pass inputs and present the subagent's output. Do NOT write
 production code yourself. Delegate and wait.
@@ -417,14 +434,14 @@ Task mode: update `state.md` → `DONE`.
 
 **Stop. Wait for approval.**
 
-After approval → return to Phase 0 step 3a for the next slice. If
-no more slices → proceed to Phase 3.
+After approval → return to Phase 1 for the next slice. If
+no more slices → proceed to Phase 4.
 
 ---
 
-## PHASE 3 — Refactoring
+## PHASE 4 — Refactoring
 
-> Title: **PHASE 3** — REFACTOR: Delegating refactoring pass
+> Title: **PHASE 4** — REFACTOR: Delegating refactoring pass
 
 ### Control flow
 
@@ -452,13 +469,13 @@ or:
 > ### Refactoring
 > None needed.
 
-Proceed to Phase 4.
+Proceed to Phase 5.
 
 ---
 
-## PHASE 4 — Quality Checks
+## PHASE 5 — Quality Checks
 
-> Title: **PHASE 4** — QUALITY: Running quality gates
+> Title: **PHASE 5** — QUALITY: Running quality gates
 
 ### Control flow
 
@@ -489,27 +506,27 @@ specific-file command.
 > {commands run}
 > ```
 
-Proceed to Phase 5.
+Proceed to Phase 6.
 
 ---
 
-## PHASE 5 — Finalize
+## PHASE 6 — Finalize
 
-> Title: **PHASE 5** — COMPLETE: All phases finished
+> Title: **PHASE 6** — COMPLETE: All phases finished
 
 ### Control flow
 
 1. **Task mode:** Verify every slice in `state.md` is `DONE` and
    task `Status` is `done`. If any slice is not `DONE`, report it
    before proceeding.
-2. **Self-check (both modes):** Confirm that Phase 3 Refactoring
+2. **Self-check (both modes):** Confirm that Phase 4 Refactoring
    ran. Report pass/fail.
 
 > Result:
 > ### Summary
 > - {file}: {one-line summary}
 > - Standards self-check: {pass/fail}
-> - Refactoring: {from Phase 3}
+> - Refactoring: {from Phase 4}
 >
 > ### Quality checks
 > ✅/❌/⚠️ per gate
