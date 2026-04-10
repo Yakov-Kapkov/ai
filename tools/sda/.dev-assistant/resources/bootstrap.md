@@ -1,8 +1,7 @@
-# Bootstrap — initialization for `sda-dev` agent
+# Bootstrap
 
-This file is read by `sda-dev` at the start of every conversation.
-
-Follow these steps before doing any implementation work.
+**§1–§2** — execute at every conversation start.
+**§3–§4** — reference material; read only when a phase references them.
 
 ---
 
@@ -36,19 +35,20 @@ Then end your response. Nothing else.
 
 ---
 
-## 2. Standards
+## 2. Load development guidance and coding standards
 
-Coding standards are defined globally and may be overridden by
-workspace-local standards. If the workspace contains local coding
-standards, those take precedence over global defaults.
+You need **development guidance** (behavioral/process rules) and
+**coding standards** (code structure/style rules) to produce
+compliant code.
+
+If nothing is found, proceed without them. If both global and
+local versions exist, local overrides global on conflict.
 
 ---
 
 ## 3. Locate the task
 
-The user provides a **task name** (e.g. `001. snowflake-config-provider`).
-Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered
-sequentially with a three-digit prefix (e.g. `001. `, `002. `, `003. `).
+The user provides a **task name**. Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered sequentially with a three-digit prefix (e.g. `001. `, `002. `, `003. `).
 
 Each task folder contains:
 

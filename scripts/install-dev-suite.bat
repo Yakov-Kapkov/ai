@@ -16,6 +16,10 @@ powershell -NoProfile -Command "Write-Host '== Updating standards-compliance ski
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-standards-compliance.ps1"
 
 echo.
+powershell -NoProfile -Command "Write-Host '== Updating development-guidance skill ==' -ForegroundColor Yellow"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "development-guidance"
+
+echo.
 powershell -NoProfile -Command "Write-Host '== Updating troubleshooting skill ==' -ForegroundColor Yellow"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%update-skill.ps1" -Name "troubleshooting"
 

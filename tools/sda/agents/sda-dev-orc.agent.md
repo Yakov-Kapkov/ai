@@ -26,21 +26,24 @@ refactoring, and quality checks.
 
 ## HARD CONSTRAINTS — read before anything else
 
-### Standards compliance
+### Development guidance and coding standards
 
-**Standards guide decisions, not just verification.** When facing a
-choice — how to fix a failing command, how to handle a missing
-dependency, which approach to take — consult loaded standards before
-acting. Standards apply to process decisions (how to run tests, how
-to resolve failures) not only to code output.
+Before making a **behavioral decision** (workflow order, how to
+diagnose a failure, whether to write tests first), MUST check
+loaded development guidance. If guidance covers it, follow it.
+If no guidance was loaded, follow this agent's phase workflow.
+
+Before making a **coding decision** (naming, types, imports,
+structure, style, constants), MUST check loaded coding standards.
+If standards cover it, follow them. If no standards were loaded,
+apply general best practices.
 
 ### `.dev-assistant` folder access
 
-The `.dev-assistant` folder is hidden from search indexes. Never use
-`file_search`, `grep_search`, or `semantic_search` to locate files
-inside it. Always use direct `read_file` with the known path —
-e.g., `./.dev-assistant/project-tools.md`,
-`./.dev-assistant/tasks/<task-name>/task.md`.
+The `.dev-assistant` folder is gitignored and hidden — `file_search`,
+`grep_search`, and `semantic_search` cannot find it or anything
+inside it. Use `read_file` with the known path, or `list_dir` to
+discover contents (e.g., task folder prefixes).
 
 ### Terminal command scope
 
@@ -147,36 +150,27 @@ messages, Result templates, and approval gates.
 | 5 | QUALITY |
 | 6 | COMPLETE |
 
-### Rules
+### Phase structure
 
-- **Every phase MUST begin by printing its Title message.** Each
-  phase section contains a `> Title:` line — output that text
-  verbatim as the first thing when entering the phase, before any
-  tool calls, analysis, or delegation.
-- **Print a horizontal rule (`---`) before each phase title** to
-  visually separate phases. Exception: Phase 0 has no preceding
-  phase, so no rule before it.
-- **Every phase MUST end by printing its Result.** Each phase section
-  contains a `> Result:` block — print it verbatim, substituting
-  `{placeholders}` with actual values. The `> Result:` prefix itself
-  is not printed — only the content after it.
-- **Only the first message of a phase** uses the
-  `PHASE N — LABEL:` prefix. Subsequent messages within the same
-  phase must NOT repeat it.
+- **Every phase MUST begin with its Title message** — the
+  `> Title:` line, verbatim, before any tool calls or output.
+- **Print `---` before each phase title.** Exception: Phase 0.
+- **Every phase MUST end with its Result** — the `> Result:` block,
+  substituting `{placeholders}`. The `> Result:` prefix itself is
+  not printed.
+- **Only the first message of a phase** prints the
+  `PHASE N — LABEL:` prefix. Subsequent messages do not repeat it.
+
+### Tone
+
 - Bullet points over paragraphs. `KEY: value` pairs over prose.
-- Output findings as `KEY: value` pairs — no sentences wrapping
-  a value. If the value is a list, use a bullet list under the key.
 - State what is happening, not what you are about to do.
 - Show only what changed — not everything you touched.
-
-### Forbidden
-
-- "Let me read…", "Now I'll…", "I will now…", "First, let me…"
-- "Let me check…", "Let me verify…", "Let me confirm…"
-- Restating the task, slice description, or user request.
-- Announcing file reads, searches, or edit operations.
-- Summarising what you are *about to* do.
-- Stating what you are about to do instead of what is happening.
+- No first person casual (_"let me"_, _"I'll"_, _"I think"_),
+  filler words (_"now"_, _"great"_, _"okay"_), or narration of
+  decisions — state results only.
+- When printing Result templates, strip the `> ` prefix — output
+  as plain markdown, not blockquotes.
 
 ---
 
@@ -184,41 +178,90 @@ messages, Result templates, and approval gates.
 
 > Title: **PHASE 0** — BOOTSTRAP: Initialising
 
-This phase reads configuration, loads standards, and detects the
-operating mode. No source or test files are read. No subagent
-delegation occurs.
+1. **Execute §1–§2 of
+   `./.dev-assistant/resources/bootstrap.md`.** If bootstrap says
+   **HARD STOP**, print its message exactly and end the response.
 
-**No text output until the Phase 0 Result.** Every step below is
-tool calls only — no prose, no narration, no commentary between
-tool calls. The only user-visible text from this phase is the Title
-(above) and the Result block (below).
+2. **Detect mode:**
+   - **Task mode** — the user wants to execute the slice loop
+     (e.g., "implement this task", "continue", "next slice").
+     Merely referencing a task name or attaching `task.md` for
+     context does NOT trigger task mode.
+   - **Ad-hoc mode** — everything else. Default mode.
 
-### Control flow
+3. Both modes → proceed to Phase 1 (PLAN).
 
-1. **Read bootstrap file** —
-   `./.dev-assistant/resources/bootstrap.md` (detect language,
-   verify tooling). If bootstrap says **HARD STOP** (missing
-   `project-tools.md` or `project-config.json`), print its message
-   exactly and end the response.
+**Constraints — Phase 0 only:**
+- Tool calls only between Title and Result — no prose, no narration,
+  no commentary.
+- Do not read source or test files.
+- Do not search the codebase.
+- Do not analyse or explore the user's task.
+- Do not read `task.md` or `state.md`.
+- Do not delegate to subagents.
+- Do not use `file_search` or `grep_search` to find standards or
+  guidance files.
 
-2. **Read standards** — load all existing coding standards
-   so rules are available before writing any code.
+> Result:
+> **Language**: {language}
+> **Approval gates**: {true/false}
+> **Development guidance**:
+> - {full path to standards file}
+> _(or "not found")_
+>
+> **Coding standards**
+> Global:
+> - {full path to standards file}
+> _(or "not found")_
+>
+> Local:
+> - {full path to standards file}
+> _(or "not found")_
 
-3. **Detect mode.** Two modes, determined by the user's intent:
-   - **Task mode** — `task.md` is the specification. Applies when
-     the user wants to execute the slice loop (e.g., "implement
-     this task", "continue", "next slice"). Merely referencing a
-     task name or attaching `task.md` for context does NOT trigger
-     task mode.
-   - **Ad-hoc mode** — the user's words are the specification.
-     Everything else. Default mode.
+Proceed to Phase 1.
 
-4. **Route by mode:**
-   - Task mode → proceed to Phase 1 (PLAN).
-   - Ad-hoc mode → execute ad-hoc setup (below), then proceed to
-     Phase 2 (RED).
+---
 
-#### Ad-hoc setup (Phase 0 only)
+## PHASE 1 — Plan
+
+> Title: **PHASE 1** — PLAN: Preparing work
+
+This phase prepares the work unit for the current mode. In task
+mode it extracts a slice from `task.md`. In ad-hoc mode it explores
+the codebase and derives a work unit from the user's request.
+
+Follow the sub-flow for the detected mode.
+
+### Task mode
+
+**STATE ANCHOR — re-read this every time you enter Phase 1 in task
+mode:** You are preparing slice inputs from `task.md` alone.
+`task.md` is self-contained. Do NOT read source or test files. Do
+NOT delegate exploration to a subagent at this moment. Do NOT
+search the codebase. Extract all slice inputs (scenarios, file
+paths, Changes, Test Context) directly from `task.md`.
+
+1. **Read bootstrap §3 (Locate the task)** to find the task folder.
+2. **Read `state.md`.** Note the task-level `Status` field. Find
+   the first non-DONE slice:
+   - `PENDING` → continue to step 3.
+   - `RED` → resuming — skip Phase 2, go directly to Phase 3.
+   - `GREEN` → resuming — present for approval, then mark DONE.
+   - All `DONE` → warn user, ask whether to proceed.
+3. **Read `task.md`** — identify the current slice and its type
+   (`tests required`, `tests only`, or `integration only`).
+   Ignore the **Source References** section.
+4. **Extract slice inputs** from `task.md`: scenarios, source/test
+   file paths, Changes blocks, Test Context.
+5. **Determine route:**
+
+   | Slice type | Route |
+   |---|---|
+   | `tests required` | Phase 2 (RED) → Phase 3 (GREEN) |
+   | `tests only` | Phase 2 (RED, expected GREEN) |
+   | `integration only` | Phase 3 (GREEN, integration) |
+
+### Ad-hoc mode
 
 Skip state tracking (no `state.md` updates).
 
@@ -247,66 +290,9 @@ Skip state tracking (no `state.md` updates).
    | `tests only` | Phase 2 (RED, expected GREEN) |
    | `integration only` | Phase 3 (GREEN, integration) |
 
-### Phase 0 Result
-
 > Result:
-> **Language**: {language}
-> **Approval gates**: {true/false}
-> **Standards**
-> Global:
-> - {full path to standards file}
-> _(or "not found")_
-> Local:
-> - {full path to standards file}
-> _(or "not found")_
->
-> **Ad-hoc mode only:**
-> ## {name} — {type}
-
-Proceed to the routed phase.
-
----
-
-## PHASE 1 — Plan (task mode only)
-
-> Title: **PHASE 1** — PLAN: Preparing slice
-
-This phase runs once per slice. It reads the task, identifies the
-current slice, extracts inputs, and determines the route.
-
-**STATE ANCHOR — re-read this every time you enter Phase 1:** You
-are preparing slice inputs from `task.md` alone. `task.md` is
-self-contained. Do NOT read source or test files. Do NOT delegate
-exploration to a subagent at this moment. Do NOT search the
-codebase. Extract all slice inputs (scenarios, file paths, Changes,
-Test Context) directly from `task.md`.
-
-### Control flow
-
-1. **Read bootstrap §3 (Locate the task)** to find the task folder.
-2. **Read `state.md`.** Note the task-level `Status` field. Find
-   the first non-DONE slice:
-   - `PENDING` → continue to step 3.
-   - `RED` → resuming — skip Phase 2, go directly to Phase 3.
-   - `GREEN` → resuming — present for approval, then mark DONE.
-   - All `DONE` → warn user, ask whether to proceed.
-3. **Read `task.md`** — identify the current slice and its type
-   (`tests required`, `tests only`, or `integration only`).
-   Ignore the **Source References** section.
-4. **Extract slice inputs** from `task.md`: scenarios, source/test
-   file paths, Changes blocks, Test Context.
-5. **Determine route:**
-
-   | Slice type | Route |
-   |---|---|
-   | `tests required` | Phase 2 (RED) → Phase 3 (GREEN) |
-   | `tests only` | Phase 2 (RED, expected GREEN) |
-   | `integration only` | Phase 3 (GREEN, integration) |
-
-### Phase 1 Result
-
-> Result:
-> ## Slice {N}: {name} — {type}
+> ## Slice {N}: {name} — {type} _{for task mode}_
+> ## {name} — {type} _{for ad-hoc mode}_
 
 ---
 
@@ -465,11 +451,11 @@ Rules:
 - Skip if already clean.
 ```
 
-> Result: one of:
+> Result:
 > ### Refactoring
 > - {file}: {what was fixed}
-
-or:
+>
+> or:
 > ### Refactoring
 > None needed.
 

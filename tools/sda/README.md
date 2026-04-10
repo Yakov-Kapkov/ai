@@ -66,7 +66,11 @@ SDA works best with the [**Standards Compliance**](../../skills/standards-compli
 
 See the [Standards Compliance README](../../skills/standards-compliance/README.md) for installation instructions.
 
-### 3. Run the `sda-init` agent
+### 3. Install the Development Guidance skill (recommended)
+
+The [**Development Guidance**](../../skills/development-guidance/) skill provides TDD workflow methodology, diagnostic strategy, and quality gates. It complements Standards Compliance (what good code looks like) with how to produce it.
+
+### 4. Run the `sda-init` agent
 
 Invoke the `sda-init` agent (or the `/sda-init` prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
 

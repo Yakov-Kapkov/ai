@@ -74,6 +74,7 @@ sda-dev-orc ─delegates─▸ sda-coder             orchestrated branch
 | `design.md` schema (in `sda-system`) | `sda-feature` (references system design) | Feature designer references system architecture |
 | Communication rules (silent-by-default, forbidden phrases) | `sda-dev`, `sda-dev-orc` | Both share identical communication constraints |
 | Standards compliance rules | `sda-dev`, `sda-dev-orc`, `sda-test-writer`, `sda-coder` | All code-producing agents enforce standards |
+| Development guidance / coding standards skill references | `sda-dev`, `sda-dev-orc` | Both reference `development-guidance` for process and coding standards for output |
 | Quality check gates (Phase 5) | `sda-dev`, `sda-dev-orc` | Both run the same quality gates |
 | `sda-init` output format (`project-tools.md`, `project-config.json`) | `bootstrap.md`, `sda-dev`, `sda-dev-orc` | Implementation agents depend on init outputs |
 | `README.md` | Keep consistent with all agent descriptions and workflow phases | User-facing docs must match agent behavior |

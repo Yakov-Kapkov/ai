@@ -39,6 +39,7 @@ Reusable skills that extend agent capabilities.
 | Skill | Description |
 |---|---|
 | [`commit`](skills/commit/) | Analyzes working directory changes, composes conventional commit messages, and executes VCS operations after user approval |
+| [`development-guidance`](skills/development-guidance/) | Development methodology — TDD workflow, diagnostic strategy, constant management, quality gates |
 | [`repo-onboarding`](skills/repo-onboarding/README.md) | Generates four onboarding docs for a repo: tooling commands, architecture, summary, and quickstart |
 | [`standards-compliance`](skills/standards-compliance/README.md) | Enforces project coding standards on all produced code changes — resolves conflicts between task specs and standards |
 | [`troubleshooting`](skills/troubleshooting/) | Troubleshooting dictionary for unexpected command results — test failures, build errors, lint violations, runtime exceptions |
@@ -57,13 +58,12 @@ Multi-agent tool suites.
 
 ### [`resources/`](resources/README.md)
 
-Coding standards, tool-discovery specs, and shared development workflow — used by both the `tdd-workflow`
+Coding standards and tool-discovery specs — used by both the `tdd-workflow`
 agents and the `prompts/tdd/` workflow.
 
 | Resource | Contents |
 |---|---|
-| `resources/common-standards.md` | Language-agnostic coding rules (SOLID, AAA, behavioral testing, etc.) |
-| `resources/development-workflow.md` | Shared, language-independent TDD process and quality gates |
+| `resources/common-standards.md` | Language-agnostic coding rules (SOLID, AAA, behavioral testing, constant reuse, etc.) |
 | `resources/java/` | `tool-discovery.md`, `coding-standards.md`, `testing-standards.md`, `code-style.md` |
 | `resources/typescript/` | `tool-discovery.md`, `coding-standards.md`, `testing-standards.md`, `code-style.md` |
 | `resources/python/` | `tool-discovery.md`, `coding-standards.md`, `testing-standards.md`, `code-style.md` |
