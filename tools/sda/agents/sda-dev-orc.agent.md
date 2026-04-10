@@ -250,9 +250,13 @@ Skip state tracking (no `state.md` updates).
 ### Phase 0 Result
 
 > Result:
-> Language: {language}
-> Approval gates: {true/false}
-> Standards:
+> **Language**: {language}
+> **Approval gates**: {true/false}
+> **Standards**
+> Global:
+> - {full path to standards file}
+> _(or "not found")_
+> Local:
 > - {full path to standards file}
 > _(or "not found")_
 >
