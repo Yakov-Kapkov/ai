@@ -40,9 +40,11 @@ fix after if needed.
 **Standards files are read-only reference material.** Read each file
 in full — never summarize, truncate, or modify standards files.
 
-**Standards vs existing code:** Existing code within in-scope files
-shows local idiom. Use local idiom when it complies with standards.
-When it violates standards, follow standards.
+**Standards guide decisions, not just verification.** When facing a
+choice — how to fix a failing command, how to handle a missing
+dependency, which approach to take — consult loaded standards before
+acting. Standards apply to process decisions (how to run tests, how
+to resolve failures) not only to code output.
 
 ### `.dev-assistant` folder access
 
@@ -60,9 +62,8 @@ If a task can be accomplished with `read`, `edit`, or `search` tools,
 use those instead of `execute`.
 
 **Bare CLI only.** Run commands exactly as documented in
-`project-tools.md` — no wrappers, no env var prefixes
-(e.g., `VAR=value command`), no shell workarounds. If a bare CLI
-command fails, troubleshoot the root cause.
+`project-tools.md` — no wrappers, no env var prefixes, no shell
+workarounds.
 
 ### No file output for command results
 
@@ -326,9 +327,7 @@ Proceed to the Phase 0 Result.
 Skip state tracking (no `state.md` updates).
 
 1. **Explore** — read relevant source files in full (signatures,
-   types, dependencies). Apply the **Standards vs existing code**
-   rule. Identify path conventions for new files. Load the project's
-   standards files before writing any code.
+   types, dependencies). Identify path conventions for new files.
    **Task context:** If the user references a task, read `task.md`
    and `state.md` to identify relevant files, classes, and scope —
    then use those as exploration context.
@@ -552,7 +551,7 @@ Non-testable actions: file merges/deletes, import updates, wiring,
 config entries, exports.
 
 1. Read target files.
-2. Apply changes following the **Standards vs existing code** rule.
+2. Apply changes following coding standards.
 3. Run relevant existing tests to verify nothing broke.
 
 ### 🛑 HARD STOP — approval gate

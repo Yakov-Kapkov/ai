@@ -42,6 +42,13 @@ open sockets, or connect to databases. Every external endpoint must
 be mocked. A test that hangs because no server is reachable is a
 test-isolation violation, not a server problem.
 
+**No real configuration or credentials:** Unit tests MUST use
+hardcoded fake/dummy values for all external configuration — URLs,
+API keys, tokens, regions, connection strings. Never load values
+from real configuration files or the real environment. Real
+credentials in tests are a security risk; real URLs may cause
+accidental network calls.
+
 ## Behavioral Testing
 
 **RULE**: Tests MUST verify **observable behavior** (inputs → outputs,

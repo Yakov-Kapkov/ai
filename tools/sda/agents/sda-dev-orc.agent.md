@@ -26,6 +26,14 @@ refactoring, and quality checks.
 
 ## HARD CONSTRAINTS — read before anything else
 
+### Standards compliance
+
+**Standards guide decisions, not just verification.** When facing a
+choice — how to fix a failing command, how to handle a missing
+dependency, which approach to take — consult loaded standards before
+acting. Standards apply to process decisions (how to run tests, how
+to resolve failures) not only to code output.
+
 ### `.dev-assistant` folder access
 
 The `.dev-assistant` folder is hidden from search indexes. Never use
@@ -39,9 +47,8 @@ e.g., `./.dev-assistant/project-tools.md`,
 Only run terminal commands documented in `project-tools.md`.
 
 **Bare CLI only.** Run commands exactly as documented in
-`project-tools.md` — no wrappers, no env var prefixes
-(e.g., `VAR=value command`), no shell workarounds. If a bare CLI
-command fails, troubleshoot the root cause.
+`project-tools.md` — no wrappers, no env var prefixes, no shell
+workarounds.
 
 ### No file output for command results
 
