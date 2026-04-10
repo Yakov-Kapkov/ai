@@ -1,9 +1,12 @@
 ---
 name: commit
-description: "Analyze working directory changes, compose a conventional commit message, and execute VCS operations after user approval. Use when: the user says 'commit', 'push', 'check in', 'submit changes', or after implementation is complete and changes need to be committed. Supports git, hg, and svn."
+description: "Use when the user says commit, push, check in, submit changes, or wants to commit working directory changes. Analyzes diffs, composes conventional commit messages, and executes VCS operations after approval."
+model: Claude Haiku 4.5 (copilot)
+tools: [read, execute]
+user-invokable: true
 ---
 
-# Commit Workflow
+# Commit Agent
 
 Analyze working-directory changes and compose a commit message for user
 approval. Execute VCS write operations only after explicit approval.
@@ -21,6 +24,7 @@ approval. Execute VCS write operations only after explicit approval.
   branch deletion, history rewriting, or discarding uncommitted work.
 - DO NOT commit without user approval of the message.
 - DO NOT push without explicit user request or confirmation.
+- DO NOT perform any task unrelated to committing changes.
 
 ## §1. Detect VCS Commands
 
@@ -160,7 +164,7 @@ Caused false positives on multi-line inputs.
 Refs: a3b8f2c
 ```
 
-### 🛑 Approval gate
+### Approval gate
 
 Present:
 1. Files to be committed (from status output)

@@ -14,6 +14,7 @@ Copilot chat agents — invokable by name in the agent panel.
 | Agent | Description |
 |---|---|
 | [`agent-designer`](agents/agent-designer/) | Creates, reviews, and improves custom Copilot agents (`.agent.md` files) — single agents and coordinated groups |
+| [`commit`](agents/commit/) | Fast commit agent — analyzes diffs, composes conventional commit messages, executes VCS operations after approval |
 | [`feature-designer`](agents/feature-designer/) | Researches, designs, and plans features and tasks for development |
 | [`system-designer`](agents/system-designer/) | System design assistant — generates and refactors `design.md` and UML diagrams |
 | [`tdd-workflow`](agents/tdd-workflow/README.md) | Orchestrates a full TDD lifecycle across focused subagents — research, test writing, implementation, quality audit |
@@ -38,7 +39,6 @@ Reusable skills that extend agent capabilities.
 
 | Skill | Description |
 |---|---|
-| [`commit`](skills/commit/) | Analyzes working directory changes, composes conventional commit messages, and executes VCS operations after user approval |
 | [`repo-onboarding`](skills/repo-onboarding/README.md) | Generates four onboarding docs for a repo: tooling commands, architecture, summary, and quickstart |
 | [`standards-compliance`](skills/standards-compliance/README.md) | Enforces project coding standards on all produced code changes — resolves conflicts between task specs and standards |
 | [`troubleshooting`](skills/troubleshooting/) | Troubleshooting dictionary for unexpected command results — test failures, build errors, lint violations, runtime exceptions |
@@ -77,6 +77,7 @@ Installation and update scripts.
 | Script | Description |
 |---|---|
 | `install-dev-suite.bat` | Installs the dev suite into a project |
+| `update-agent.ps1` | Updates a standalone agent from this repo into a target project |
 | `update-skill.ps1` | Updates a skill from this repo into a target project |
 | `update-standards-compliance.ps1` | Updates the standards-compliance skill specifically |
 | `update-tool.ps1` | Updates a tool from this repo into a target project |
