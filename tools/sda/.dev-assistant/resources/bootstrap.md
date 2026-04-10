@@ -24,17 +24,15 @@ Read all three files **in one parallel batch**:
 If no marker is found or the language is ambiguous, ask: _"Could not detect
 the project language. Please specify."_
 
-**Project tooling check:**
+**Project setup check:**
 
-If `project-tools.md` is missing → **HARD STOP. No exceptions. No workarounds.
-Do not search for it elsewhere. Do not read project manifest files as a substitute.
-Do not reason about what the user "probably wants". Do not continue.**
+If `project-tools.md` or `project-config.json` is missing → **HARD
+STOP. No exceptions. No workarounds. Do not search for it elsewhere.
+Do not read project manifest files as a substitute. Do not reason
+about what the user "probably wants". Do not continue.**
 Print exactly: _"Project not initialized.
 Invoke the **init** agent in a new chat to set up project tooling."_
 Then end your response. Nothing else.
-
-If `project-config.json` is missing → continue with defaults
-(`tests.coverage.enabled: true`, `tests.coverage.threshold: 95`).
 
 ---
 

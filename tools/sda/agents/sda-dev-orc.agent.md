@@ -79,8 +79,10 @@ more reasoning.
 
 ### Approval gates
 
-At every approval gate: **stop all processing, make zero further tool
-calls, and end your response.** Wait for explicit user approval.
+**`approvalGates` in `project-config.json` (default: `true`).**
+`true` → stop at every gate, wait for approval.
+`false` → print Result, continue immediately. State updates and
+error stops still apply.
 
 | Slice type | Gates |
 |---|---|
@@ -88,8 +90,8 @@ calls, and end your response.** Wait for explicit user approval.
 | Tests only | 🛑 after GREEN |
 | Integration only | 🛑 after implementation |
 
-- Never implement after RED without approval.
-- Never start the next work unit without approval.
+- Never implement after RED without approval (when gates enabled).
+- Never start the next work unit without approval (when gates enabled).
 - Never process multiple work units in one response.
 - Never batch RED + GREEN in one response.
 - Never skip or defer integration-only work units.
@@ -183,8 +185,8 @@ visible output from this phase is the Title and the Result block.
 1. **Read bootstrap file** —
    `./.dev-assistant/resources/bootstrap.md` (detect language,
    verify tooling). If bootstrap says **HARD STOP** (missing
-   `project-tools.md`), print its message exactly and end the
-   response.
+   `project-tools.md` or `project-config.json`), print its message
+   exactly and end the response.
 
 2. **Read standards** — load all existing coding standards
    so rules are available before writing any code.
@@ -263,6 +265,7 @@ proceed to the routed phase.
 
 > Result:
 > Language: {language}
+> Approval gates: {true/false}
 > ### Standards
 > **Global:**
 > - [{filename}]({full path})

@@ -191,11 +191,19 @@ Written by `sda-init` on first run (after user approval). Contains the commands 
 
 ### project-config.json
 
-Written by `sda-init`. Stores project-level settings, primarily coverage configuration. If missing, `sda-dev` defaults to `{ "tests": { "coverage": { "enabled": true, "threshold": 95 } } }`.
+Written by `sda-init`. Stores project-level settings read during
+bootstrap.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `approvalGates` | `boolean` | `true` | When `true`, the agent stops at every RED/GREEN/integration gate and waits for user approval before continuing. When `false`, the agent processes all slices continuously without pausing — results are still printed but no approval is requested. Error stops (e.g., tests fail after 3 attempts) still halt execution regardless of this setting. |
+| `tests.coverage.enabled` | `boolean` | `true` | Whether to run coverage checks in Phase 4 (Quality). |
+| `tests.coverage.threshold` | `number` | `95` | Minimum coverage percentage for new/modified files. |
 
 Example:
 ```json
 {
+  "approvalGates": true,
   "tests": {
     "coverage": {
       "enabled": true,
