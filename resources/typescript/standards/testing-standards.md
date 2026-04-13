@@ -7,6 +7,7 @@
 - [Async Testing](#async-testing)
 - [Test Data Creation](#test-data-creation)
 - [Test Setup / Fixtures](#test-setup--fixtures)
+- [Per-Test Overrides: Local `const` vs Outer `let`](#per-test-overrides-local-const-vs-outer-let)
 - [Test Parameterization](#test-parameterization)
 - [Mocking Best Practices](#mocking-best-practices)
 
@@ -139,6 +140,24 @@ it('test1', () => {
 });
 it('test2', () => {
   const docs = [createDocument('doc_0'), createDocument('doc_1')];  // Duplicated
+});
+```
+
+## Per-Test Overrides: Local `const` vs Outer `let`
+
+**RULE**: Do not reassign outer `let` variables in a test. Declare a local `const` for any input that differs from the shared setup.
+
+```typescript
+// ✅ preferred — self-contained, clearly shows test input
+it('should call next for valid page and pageSize', async () => {
+  const req: Partial<express.Request> = { query: { page: '2', pageSize: '50' } };
+  await handler(req as express.Request, res as express.Response, next);
+});
+
+// ❌ avoid — mutates shared state, forces reader to cross-reference beforeEach
+it('should call next for valid page and pageSize', async () => {
+  req = { query: { page: '2', pageSize: '50' } };
+  await handler(req as express.Request, res as express.Response, next);
 });
 ```
 

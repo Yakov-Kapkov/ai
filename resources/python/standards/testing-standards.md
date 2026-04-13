@@ -7,6 +7,7 @@
 - [Async Testing](#async-testing)
 - [Test Data Creation](#test-data-creation)
 - [Test Setup / Fixtures](#test-setup--fixtures)
+- [Per-Test Overrides: Local Variable vs Shared Fixture](#per-test-overrides-local-variable-vs-shared-fixture)
 - [Test Parameterization](#test-parameterization)
 - [Mocking Best Practices](#mocking-best-practices)
 
@@ -119,6 +120,23 @@ def test_single() -> None:
 
 def test_batch() -> None:
     sample_documents = [create_document(f"doc_{i}") for i in range(3)]  # Duplicated
+```
+
+## Per-Test Overrides: Local Variable vs Shared Fixture
+
+**RULE**: Do not reassign or mutate shared fixture values in a test. Declare a local variable for any input that differs from the shared setup.
+
+```python
+# ✅ preferred — self-contained, clearly shows test input
+def test_valid_page_and_page_size() -> None:
+    params = {"page": "2", "page_size": "50"}
+    result = handler(params, response, next_fn)
+
+# ❌ avoid — mutates shared state, forces reader to cross-reference fixture
+def test_valid_page_and_page_size(params: dict[str, str]) -> None:
+    params["page"] = "2"
+    params["page_size"] = "50"
+    result = handler(params, response, next_fn)
 ```
 
 ## Test Parameterization

@@ -19,9 +19,14 @@ resources/
 
 ### 1. Cross-language sync
 
-When changing a rule in one language folder, apply the same change to
-**every** language folder. Only code examples differ between languages;
-rule text is identical.
+Any change to a file under `{language}/` must be mirrored in
+the same file for **every** other language folder:
+
+- **Adding a section** → add it to every language, with language-appropriate code examples.
+- **Removing a section** → remove it from every language.
+- **Changing rule text** → apply the same text change to every language.
+
+Only code examples differ between languages; rule text is identical.
 
 ### 2. Common standards
 

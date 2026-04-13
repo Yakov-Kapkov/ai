@@ -7,6 +7,7 @@
 - [Async Testing](#async-testing)
 - [Test Data Creation](#test-data-creation)
 - [Test Setup / Fixtures](#test-setup--fixtures)
+- [Per-Test Overrides: Local Variable vs Instance Field](#per-test-overrides-local-variable-vs-instance-field)
 - [Test Parameterization](#test-parameterization)
 - [Mocking Best Practices](#mocking-best-practices)
 
@@ -149,6 +150,29 @@ void test1() {
 @Test
 void test2() {
     var docs = List.of(createDocument("doc_0"), createDocument("doc_1")); // Duplicated
+}
+```
+
+## Per-Test Overrides: Local Variable vs Instance Field
+
+**RULE**: Do not reassign or mutate instance fields in a test. Declare a local variable for any input that differs from the shared setup.
+
+```java
+// ✅ preferred — self-contained, clearly shows test input
+@Test
+void shouldCallNextForValidPageAndPageSize() {
+    var req = new MockHttpServletRequest();
+    req.addParameter("page", "2");
+    req.addParameter("pageSize", "50");
+    handler.handle(req, response, chain);
+}
+
+// ❌ avoid — mutates shared state, forces reader to cross-reference @BeforeEach
+@Test
+void shouldCallNextForValidPageAndPageSize() {
+    request.addParameter("page", "2");
+    request.addParameter("pageSize", "50");
+    handler.handle(request, response, chain);
 }
 ```
 
