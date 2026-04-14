@@ -35,14 +35,13 @@ Then end your response. Nothing else.
 
 ---
 
-## 2. Load development guidance and coding standards
+## 2. Load coding standards
 
-You need **development guidance** (behavioral/process rules) and
-**coding standards** (code structure/style rules) to produce
-compliant code.
+Coding standards are required. All code change must comply with
+coding standards. There can be two types of standards: global(user-level, system-level) and local(current workspace).
 
-If nothing is found, proceed without them. If both global and
-local versions exist, local overrides global on conflict.
+Read each file that exists in full. Report each as its full path or
+"not found" in the Phase 0 Result.
 
 ---
 

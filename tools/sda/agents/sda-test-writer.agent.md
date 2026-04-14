@@ -126,8 +126,7 @@ For each scenario in order:
 
 ### 4. Standards check
 
-Load testing standards if not already in context. Then verify the
-test file against them. Fix violations.
+Verify the test file against coding standards. Fix violations.
 
 ### 5. Completeness check
 

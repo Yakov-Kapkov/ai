@@ -40,17 +40,12 @@ fix after if needed.
 **Standards files are read-only reference material.** Read each file
 in full — never summarize, truncate, or modify standards files.
 
-### Development guidance and coding standards
+### Coding standards
 
-Before making a **behavioral decision** (workflow order, how to
-diagnose a failure, whether to write tests first), MUST check
-loaded development guidance. If guidance covers it, follow it.
-If no guidance was loaded, follow this agent's phase workflow.
-
-Before making a **coding decision** (naming, types, imports,
-structure, style, constants), MUST check loaded coding standards.
-If standards cover it, follow them. If no standards were loaded,
-apply general best practices.
+**Coding standards are required.** All coding decisions (naming,
+types, imports, structure, style, constants) MUST comply with the
+loaded coding standards. Standards take precedence — never fall
+back to general best practices.
 
 ### `.dev-assistant` folder access
 
@@ -279,16 +274,12 @@ messages, Result templates, and approval gates.
 - Do not search the codebase.
 - Do not analyse or explore the user's task.
 - Do not read `task.md` or `state.md`.
-- Do not use `file_search` or `grep_search` to find standards or
-  guidance files.
+- Do not use `file_search` or `grep_search` to find standards files.
 
 > Result:
 > **Language**: {language}
 > **Approval gates**: {true/false}
 > **Mode**: {task/ad-hoc}
-> **Development guidance**:
-> - {full path to standards file}
-> _(or "not found")_
 >
 > **Coding standards**
 > Global:
@@ -630,8 +621,8 @@ no more slices → proceed to Phase 4.
 > Title: **PHASE 4** — REFACTOR: Refactoring pass
 
 One pass over all modified files:
-- Re-read the project's standards files, then verify all produced code
-  is compliant. Fix any violation found.
+- Verify all produced code is compliant with coding standards. Fix any
+  violation found.
 - Reduce duplication, improve naming, extract responsibilities.
 - Make changes incrementally — run tests after each change.
 - Do NOT introduce new behaviour. Revert anything that breaks tests.

@@ -84,8 +84,7 @@ that returned exactly 500 lines.
 
 ### 1. Read files
 
-Read the **Source** and **Test** files. Read coding standards and
-code style if not already in context.
+Read the **Source** and **Test** files.
 
 ### 2. Implement
 
@@ -174,7 +173,7 @@ Verify nothing broke.
 
 ## Workflow — Refactoring
 
-### 1. Read all listed files and standards
+### 1. Read all listed files
 
 ### 2. Verify and fix
 
