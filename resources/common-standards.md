@@ -60,7 +60,7 @@ No extra text after the comment keyword.
 ## Test Constants
 
 **LOCAL constants**: Expected/assertion values used in ONE test only.
-**DIRECT literals**: In parameterize/`it.each` arrays, mock-only values, simple setup.
+**DIRECT literals**: In parameterize/`it.each` arrays, mock-only values (never asserted on), simple setup.
 **GLOBAL/MODULE constants**: Value asserted in 2+ tests, shared fixture values, test infrastructure.
 
 **Avoid:**
@@ -76,6 +76,11 @@ No extra text after the comment keyword.
 **RULE**: Every assertion value originating from a mock, fixture, or
 test constant MUST be referenced from that source — never re-typed
 as a literal.
+
+- If the same value appears in both mock setup and assertion, extract
+  it into a LOCAL constant and reference it in both places.
+- "Mock-only values" (DIRECT tier) are values consumed by the mock
+  but never checked in any assertion — those may remain as literals.
 
 ## Clean Code Practices
 

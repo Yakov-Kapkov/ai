@@ -90,7 +90,7 @@ context = {"llm_provider": "openai", "llm_modle": "gpt-4"}  # Typo undetected!
 - ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — name them: `CHAR_SEPARATOR = ''`
 - ✅ **Calculate derived values** when logical relationship exists (`FINAL_RETRY = MAX_RETRIES - 1`)
 
-**NOTE**: Test code has different rules — see `@testing-standards.md`.
+**NOTE**: Test code has different rules — see Test Constants and Derive Expected Values in `@common-standards.md`.
 
 ```python
 # ✅ CORRECT: Named constants — including empty and whitespace strings
