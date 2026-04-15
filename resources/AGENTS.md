@@ -98,6 +98,10 @@ across languages where the underlying convention genuinely differs
 - Bullet points over paragraphs.
 - No redundant prose explaining what is already shown in the example.
 - If a rule can be stated in one sentence, do not use two.
+- No "Why" paragraphs unless the reason is genuinely non-obvious.
+  A rule that restates its own rationale wastes tokens.
+- No "Applies to" lines when the scope is already clear from context
+  (e.g., a rule in `common-standards.md` applies to all languages).
 
 ### 6. New languages
 

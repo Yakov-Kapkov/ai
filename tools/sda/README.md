@@ -66,7 +66,11 @@ SDA works best with the [**Standards Compliance**](../../skills/standards-compli
 
 See the [Standards Compliance README](../../skills/standards-compliance/README.md) for installation instructions.
 
-### 3. Run the `sda-init` agent
+### 3. Install the Development Guidance skill (recommended)
+
+The [**Development Guidance**](../../skills/development-guidance/) skill provides TDD workflow methodology, diagnostic strategy, and quality gates. It complements Standards Compliance (what good code looks like) with how to produce it.
+
+### 4. Run the `sda-init` agent
 
 Invoke the `sda-init` agent (or the `/sda-init` prompt) once per project. It will scan your toolchain, present its findings for approval, and write `.dev-assistant/project-tools.md` and `.dev-assistant/project-config.json`.
 
@@ -145,17 +149,25 @@ PHASE 1 — DESIGN
   criteria, test scenarios, and implementation plan.
   Handoff → sda-dev.
 
-PHASE 2 — RED
-  sda-dev reads bootstrap.
-  Reads feature.md and state.md.
-  Writes failing tests for every approved scenario.
+PHASE 2 — BOOTSTRAP (once per conversation)
+  sda-dev reads bootstrap, loads standards, detects mode.
+  Ad-hoc: explores and derives work unit.
+  Task: proceeds to PLAN.
+
+PHASE 3 — PLAN (task mode, per slice)
+  sda-dev reads state.md and task.md.
+  Extracts current slice inputs.
+  Routes to RED or GREEN.
+
+PHASE 4 — RED
+  sda-dev writes failing tests for every approved scenario.
   Confirms RED state (tests fail as expected).
 
-PHASE 3 — GREEN
+PHASE 5 — GREEN
   sda-dev writes production code to make all tests pass.
   Re-runs tests until fully green.
 
-PHASE 4 — REFACTOR + QUALITY CHECKS
+PHASE 6 — REFACTOR + QUALITY CHECKS
   sda-dev refactors for quality while keeping all tests green.
   Runs mandatory quality gates: tests, coverage, type-check, lint.
   Presents results and exact commands to the user.
@@ -191,11 +203,19 @@ Written by `sda-init` on first run (after user approval). Contains the commands 
 
 ### project-config.json
 
-Written by `sda-init`. Stores project-level settings, primarily coverage configuration. If missing, `sda-dev` defaults to `{ "tests": { "coverage": { "enabled": true, "threshold": 95 } } }`.
+Written by `sda-init`. Stores project-level settings read during
+bootstrap.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `approvalGates` | `boolean` | `true` | When `true`, the agent stops at every RED/GREEN/integration gate and waits for user approval before continuing. When `false`, the agent processes all slices continuously without pausing — results are still printed but no approval is requested. Error stops (e.g., tests fail after 3 attempts) still halt execution regardless of this setting. |
+| `tests.coverage.enabled` | `boolean` | `true` | Whether to run coverage checks in Phase 5 (Quality). |
+| `tests.coverage.threshold` | `number` | `95` | Minimum coverage percentage for new/modified files. |
 
 Example:
 ```json
 {
+  "approvalGates": true,
   "tests": {
     "coverage": {
       "enabled": true,

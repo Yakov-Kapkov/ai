@@ -69,14 +69,22 @@ an approach, use it. No cycling between alternatives.
 Read all files in parallel, 500 lines at a time. Continue any file
 that returned exactly 500 lines.
 
+**Rules:**
+- First read is always lines 1–500.
+- Exactly 500 lines returned → file has more. Fewer → file is done.
+- Never use ranges smaller than 500 lines.
+- Never read files one at a time when they could be batched.
+- **Appending:** The last batch tells you the end line. Never probe
+  for the end with single-line reads.
+- Never retry the same range or use single-line reads.
+
 ---
 
 ## Workflow — GREEN
 
 ### 1. Read files
 
-Read the **Source** and **Test** files. Read coding standards and
-code style if not already in context.
+Read the **Source** and **Test** files.
 
 ### 2. Implement
 
@@ -90,6 +98,17 @@ Write only what is needed to pass the tests.
 
 Parallel edits allowed only for isolated leaf files with fixed
 interfaces. When in doubt, go sequential.
+
+### 2a. Test isolation after production changes
+
+When a production change adds new external calls (HTTP, database,
+messaging) through an existing public function:
+1. Identify existing tests for that function.
+2. Verify they mock every external dependency — including ones
+   introduced by this change.
+3. Report missing mocks to `sda-dev-orc` — do not modify test files.
+
+Scope: only functions modified in the current slice.
 
 ### 3. Run tests
 
@@ -154,7 +173,7 @@ Verify nothing broke.
 
 ## Workflow — Refactoring
 
-### 1. Read all listed files and standards
+### 1. Read all listed files
 
 ### 2. Verify and fix
 
@@ -183,3 +202,5 @@ Or: `### Refactoring\nNone needed.`
 - Read testing standards — those govern `sda-test-writer`, not you.
 - Add features beyond what the Changes blocks specify.
 - Run any command other than the provided test command.
+- Add wrappers, env var prefixes, or shell workarounds to commands.
+  If a command fails, troubleshoot the root cause.

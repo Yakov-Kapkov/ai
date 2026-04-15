@@ -1,8 +1,7 @@
-# Bootstrap — initialization for `sda-dev` agent
+# Bootstrap
 
-This file is read by `sda-dev` at the start of every conversation.
-
-Follow these steps before doing any implementation work.
+**§1–§2** — execute at every conversation start.
+**§3–§4** — reference material; read only when a phase references them.
 
 ---
 
@@ -24,33 +23,31 @@ Read all three files **in one parallel batch**:
 If no marker is found or the language is ambiguous, ask: _"Could not detect
 the project language. Please specify."_
 
-**Project tooling check:**
+**Project setup check:**
 
-If `project-tools.md` is missing → **HARD STOP. No exceptions. No workarounds.
-Do not search for it elsewhere. Do not read project manifest files as a substitute.
-Do not reason about what the user "probably wants". Do not continue.**
+If `project-tools.md` or `project-config.json` is missing → **HARD
+STOP. No exceptions. No workarounds. Do not search for it elsewhere.
+Do not read project manifest files as a substitute. Do not reason
+about what the user "probably wants". Do not continue.**
 Print exactly: _"Project not initialized.
 Invoke the **init** agent in a new chat to set up project tooling."_
 Then end your response. Nothing else.
 
-If `project-config.json` is missing → continue with defaults
-(`tests.coverage.enabled: true`, `tests.coverage.threshold: 95`).
-
 ---
 
-## 2. Standards
+## 2. Load coding standards
 
-Coding standards are defined globally and may be overridden by
-workspace-local standards. If the workspace contains local coding
-standards, those take precedence over global defaults.
+Coding standards are required. All code change must comply with
+coding standards. There can be two types of standards: global(user-level, system-level) and local(current workspace).
+
+Read each file that exists in full. Report each as its full path or
+"not found" in the Phase 0 Result.
 
 ---
 
 ## 3. Locate the task
 
-The user provides a **task name** (e.g. `001. snowflake-config-provider`).
-Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered
-sequentially with a three-digit prefix (e.g. `001. `, `002. `, `003. `).
+The user provides a **task name**. Task folders live at `./.dev-assistant/tasks/<task-name>/` and are numbered sequentially with a three-digit prefix (e.g. `001. `, `002. `, `003. `).
 
 Each task folder contains:
 

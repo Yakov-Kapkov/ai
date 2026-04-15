@@ -141,8 +141,11 @@ When reviewing or producing code examples in task documents (`task.md`):
 
 1. Identify the file type (production, test, stub) to determine which
    standards files apply (see scope-specific application above)
-2. Read standards files from the skill's `./standards/` folder directly
-   — these are bundled skill resources, no user confirmation is needed
+2. Read each applicable standards file **in full** (line 1 through end
+   of file) from the skill's `./standards/` folder — these are bundled
+   skill resources, no user confirmation is needed. Read all applicable
+   files in parallel. If a file exceeds one read call, continue reading
+   until the end before evaluating compliance.
 3. Compare produced code against all applicable rules
 4. Do not re-derive rules already in the standards — read the standard,
    apply it directly

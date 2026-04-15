@@ -41,10 +41,10 @@ orchestrator → sub-agents). Ensure consistency across the group:
 handoffs, tool scoping, naming, description alignment.
 
 ### Smart instruction editing
-When modifying agent instructions, apply the **Instruction Quality
-Standard** (see below). Never bolt new text onto an existing file
-without first analyzing the full content for overlap, contradiction,
-and clarity.
+When modifying agent instructions, apply the **Consistency Verification
+Protocol** and the **Instruction Quality Standard** (see below). Never
+bolt new text onto an existing file without first analyzing the full
+content for overlap, contradiction, and clarity.
 
 ---
 
@@ -143,9 +143,84 @@ When reviewing a group of agents:
    (and group, if applicable).
 3. **Check impact** — does this change affect handoffs, tool scoping,
    or descriptions of other agents in the group?
-4. **Apply** using `replace_string_in_file` or
+4. **Draft** the change mentally. Do NOT apply yet.
+5. **Verify** — run the full Consistency Verification Protocol (below)
+   against the draft change. This step is **mandatory and blocking** —
+   do not proceed to step 6 until all checks pass or conflicts are
+   resolved with the user.
+6. **Apply** using `replace_string_in_file` or
    `multi_replace_string_in_file` — never rewrite entire files.
-   Re-validate with the checklist after applying.
+7. **Post-apply audit** — re-read the modified file(s) and run the
+   Quality Checklist + IQ checks on the result. If new issues surface,
+   fix them immediately before reporting completion.
+
+---
+
+## Consistency Verification Protocol
+
+Run this protocol on every proposed change **before** applying it.
+Each check is pass/fail. If any check fails, resolve the issue (or
+escalate to the user) before proceeding.
+
+### CV-1 Internal duplication scan
+- Re-read the **entire** target file.
+- For each statement the change introduces, search the full file for
+  semantically equivalent instructions — even if worded differently.
+- **Fail** if the change duplicates existing content. **Fix** by
+  merging into the existing canonical location or removing the
+  duplicate.
+- Check for repeated cross-section content: if the same constraint
+  appears in multiple sections, consolidate into one shared section.
+
+### CV-2 Sibling duplication scan
+- Identify all sibling agents (same folder, same group, or connected
+  via handoffs).
+- Search each sibling for instructions semantically equivalent to the
+  proposed change.
+- **Fail** if the instruction already exists in a sibling and should
+  live in a shared `.instructions.md` instead.
+- **Fail** if the instruction contradicts a sibling (escalate to CV-3).
+
+### CV-3 Contradiction detection
+- Compare the proposed change against **every** existing rule in the
+  target file. Ask: "Can both this new instruction and the existing
+  instruction be followed simultaneously?"
+- Check for contradictions across sections — a rule in "Workflow" must
+  not conflict with a rule in "Boundaries" or "Constraints".
+- For agent groups, verify the change does not contradict the
+  orchestrator's expectations or sibling constraints.
+- **Fail** if any contradiction is found. **Action**: present both
+  conflicting statements to the user. Ask which one wins. Never
+  silently override or keep both.
+
+### CV-4 Semantic coherence
+- After mentally applying the change, re-read the full agent as a
+  whole. Ask: "Does this agent still have one coherent role? Do all
+  sections support the same mission?"
+- **Fail** if the change shifts the agent's scope, introduces role
+  confusion, or adds responsibilities that belong to a different agent.
+
+### CV-5 Impact on connected agents
+- If the target agent is part of a group, trace the change through
+  handoffs and delegations.
+- **Fail** if the change alters behavior that downstream or upstream
+  agents depend on, unless those agents are also updated.
+- List every affected agent and the required follow-up change.
+
+### Reporting format
+
+After running all five checks, produce a brief verdict block (not
+shown to the user unless a failure requires discussion):
+
+```
+CV-1 Duplication (internal): PASS | FAIL — [detail if fail]
+CV-2 Duplication (siblings):  PASS | FAIL — [detail if fail]
+CV-3 Contradictions:          PASS | FAIL — [detail if fail]
+CV-4 Semantic coherence:      PASS | FAIL — [detail if fail]
+CV-5 Connected-agent impact:  PASS | FAIL — [detail if fail]
+```
+
+If all pass, proceed to apply. If any fail, resolve before applying.
 
 ---
 

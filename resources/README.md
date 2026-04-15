@@ -9,7 +9,6 @@
 ```
 resources/
 ├── common-standards.md              ← language-agnostic rules
-├── development-workflow.md          ← shared, language-independent
 ├── java/
 │   ├── tool-discovery.md
 │   └── standards/
@@ -36,8 +35,7 @@ resources/
 
 | File | Purpose | When to Use |
 |------|---------|-------------|
-| **[common-standards.md](common-standards.md)** | Language-agnostic rules (SOLID, AAA, behavioral testing) | Loaded for all languages automatically |
-| **[development-workflow.md](development-workflow.md)** | TDD process, review criteria, quality gates | Starting new work, understanding TDD workflow |
+| **[common-standards.md](common-standards.md)** | Language-agnostic rules (SOLID, AAA, behavioral testing, constant reuse) | Loaded for all languages automatically |
 | **coding-standards.md** | Core technical rules for production code | Writing production code: types, constants, imports |
 | **testing-standards.md** | How to write quality tests | Writing any test code: structure, AAA, mocking |
 | **code-style.md** | Formatting and documentation rules | Formatting code, writing comments/docs |
@@ -49,7 +47,7 @@ resources/
 What are you doing?
 │
 ├─ Starting a new feature or fixing a bug?
-│  └─ Read development-workflow.md first (TDD cycle)
+│  └─ Use the development-guidance skill (TDD cycle, quality gates)
 │
 ├─ Writing production code?
 │  ├─ Need types, constants, imports? → coding-standards.md (for your language)
@@ -63,14 +61,6 @@ What are you doing?
 ```
 
 ## File Summaries
-
-### development-workflow.md (shared)
-**Process and methodology — language-independent**
-- TDD (Test-Driven Development) — MANDATORY
-- RED → GREEN → REFACTOR cycle
-- Development workflow steps
-- Code review criteria
-- Quality gates
 
 ### coding-standards.md
 
@@ -141,7 +131,7 @@ What are you doing?
 ## For AI Assistants (Copilot)
 
 **Context loading strategy**:
-- **New feature**: Load `development-workflow.md` first
+- **New feature**: Use the `development-guidance` skill (TDD process, quality gates)
 - **Production code**: Load `coding-standards.md` + `code-style.md` for the target language
 - **Test code**: Load `testing-standards.md` for the target language
 
@@ -149,7 +139,7 @@ What are you doing?
 
 ## For Human Developers
 
-**Onboarding**: Start with `development-workflow.md` to understand TDD, then explore language-specific files as needed.
+**Onboarding**: Use the `development-guidance` skill for TDD process, then explore language-specific files as needed.
 
 **Quick reference**: Bookmark this README and use the decision tree above.
 

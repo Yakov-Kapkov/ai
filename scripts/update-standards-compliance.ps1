@@ -13,7 +13,7 @@
 #>
 
 param(
-    [Parameter(Mandatory)] [string] $TargetBase
+    [string] $TargetBase = "$env:USERPROFILE\.copilot"
 )
 
 Set-StrictMode -Version Latest

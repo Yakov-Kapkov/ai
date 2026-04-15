@@ -110,7 +110,7 @@ const context = { llmProvider: "openai", llmModle: "gpt-4" };  // Typo undetecte
 - ❌ **NEVER use bare empty strings `''` or whitespace strings `' '`** — name them: `const CHAR_SEPARATOR = ''`
 - ✅ **Calculate derived values** when logical relationship exists (`FINAL_RETRY = MAX_RETRIES - 1`)
 
-**NOTE**: Test code has different rules — see `@testing-standards.md`.
+**NOTE**: Test code has different rules — see Test Constants and Derive Expected Values in `@common-standards.md`.
 
 ```typescript
 // ✅ CORRECT: Named constants — including empty and whitespace strings

@@ -1,4 +1,5 @@
 {
+  "approvalGates": true,
   "tests": {
     "coverage": {
       "enabled": true,
